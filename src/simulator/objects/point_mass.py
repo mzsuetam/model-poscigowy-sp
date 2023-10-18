@@ -1,7 +1,8 @@
 import pygame
 
-from .force import Force
-from .vect_2d import Vect2d
+from src.simulator.objects.force import Force
+from src.simulator.objects.vect_2d import Vect2d
+from src.simulator.utils import colors
 
 class PointMass:
     def __init__(self,
@@ -9,7 +10,7 @@ class PointMass:
                  y=0,
                  m=1,
                  radius=0.25,
-                 color=(255,255,255),
+                 color=colors.RED,
                  friction_factor=5e-2,
                  save_for_plot=False,
                  px_in_m=50
