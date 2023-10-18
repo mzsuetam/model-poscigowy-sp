@@ -1,5 +1,7 @@
 import pygame
 
+from src.simulator.utils.constants import px_in_m
+
 class Block:
     def __init__(
             self,
@@ -8,7 +10,6 @@ class Block:
             w=1,
             h=1,
             color=(100,100,100),
-            px_in_m=50,
     ):
         self.x = x
         self.y = y
@@ -16,11 +17,11 @@ class Block:
         self.h = h
 
         self.bb = pygame.Rect(0,0,0,0)
-        self.update_bb(px_in_m)
+        self.update_bb()
 
         self.color = color
 
-    def update_bb(self, px_in_m):
+    def update_bb(self):
         self.bb.x = self.x * px_in_m
         self.bb.y = self.y * px_in_m
         self.bb.w = self.w * px_in_m

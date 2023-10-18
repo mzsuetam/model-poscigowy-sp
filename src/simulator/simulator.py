@@ -5,7 +5,8 @@ from src.simulator.objects.point_mass import PointMass
 from src.simulator.objects.force import Force
 from src.simulator.objects.block import Block
 from src.simulator.view_box import ViewBox
-from src.simulator.utils import colors
+from src.simulator.utils import colors 
+from src.simulator.utils.constants import px_in_m
 
 
 class simulator:
@@ -18,7 +19,6 @@ class simulator:
                  log=False
                  ):
         self.FPS = 60
-        self.px_in_m = 50
 
         self.root_w, self.root_w = window_w, window_h
         self.root = pygame.display.set_mode((window_w, window_h))
@@ -41,11 +41,11 @@ class simulator:
     def _draw_window(self, points, blocks):
         # draw background
         self.canvas.fill(colors.BLACK)
-        for i, x in enumerate(range(0, self.canvas.get_width(), self.px_in_m)):
+        for i, x in enumerate(range(0, self.canvas.get_width(), px_in_m)):
             if self.view_box.zoom >= 1 or i % 10 == 0:
                 pygame.draw.line(self.canvas, colors.GRAY, (x, 0), (x, self.canvas.get_height()),
                                  1 if i % 10 != 0 else 3)
-        for i, y in enumerate(range(0, self.canvas.get_height(), self.px_in_m)):
+        for i, y in enumerate(range(0, self.canvas.get_height(), px_in_m)):
             if self.view_box.zoom >= 1 or i % 10 == 0:
                 pygame.draw.line(self.canvas, colors.GRAY, (0, y), (self.canvas.get_width(), y),
                                  1 if i % 10 != 0 else 3)
@@ -56,9 +56,9 @@ class simulator:
 
         # plot points
         for pt in points:
-            center = (int(pt.x * self.px_in_m), int(pt.y * self.px_in_m))
+            center = (int(pt.x * px_in_m), int(pt.y * px_in_m))
             # pygame.draw.rect(canvas, (255,255,0), pt.bb) # bounding box
-            pygame.draw.circle(self.canvas, pt.color, center, pt.radius * self.px_in_m)
+            pygame.draw.circle(self.canvas, pt.color, center, pt.radius * px_in_m)
 
         # draw canvas on root
         vb = self.view_box.get_subsurface(self.canvas)
@@ -73,18 +73,16 @@ class simulator:
         points = []
         blocks = []
 
-        wall_w = Block(0, 0, h=self.canvas.get_height() / self.px_in_m, px_in_m=self.px_in_m)
+        wall_w = Block(0, 0, h=self.canvas.get_height() / px_in_m)
         blocks.append(wall_w)
-        wall_e = Block(self.canvas.get_width() / self.px_in_m - 1, 0, h=self.canvas.get_height() / self.px_in_m,
-                       px_in_m=self.px_in_m)
+        wall_e = Block(self.canvas.get_width() / px_in_m - 1, 0, h=self.canvas.get_height() / px_in_m)
         blocks.append(wall_e)
-        wall_n = Block(0, 0, w=self.canvas.get_width() / self.px_in_m, px_in_m=self.px_in_m)
+        wall_n = Block(0, 0, w=self.canvas.get_width() / px_in_m)
         blocks.append(wall_n)
-        wall_s = Block(0, self.canvas.get_height() / self.px_in_m - 1, w=self.canvas.get_width() / self.px_in_m,
-                       px_in_m=self.px_in_m)
+        wall_s = Block(0, self.canvas.get_height() / px_in_m - 1, w=self.canvas.get_width() / px_in_m)
         blocks.append(wall_s)
 
-        b1 = Block(15, 9, h=2, px_in_m=self.px_in_m)
+        b1 = Block(15, 9, h=2)
         blocks.append(b1)
 
         p1 = PointMass(10, 10, color=colors.RED)
@@ -117,9 +115,10 @@ class simulator:
             t = frame / float(self.FPS)
             if t % 1 == 0:
                 if self.log:
-                    print(f"t = {t} [s]")
+                    self._log_header(f"t = {t} [s]")
+                    self._log(self.view_box)
                     for p in points:
-                        print(p)
+                        self._log(p)
 
             # PYGAME_EVENTS_CHECKING
             for event in pygame.event.get():  # testing all events in pygame
@@ -149,16 +148,13 @@ class simulator:
                     else:
                         self.view_box.zoom *= 1.1
 
-            for pt in points:
-                pt.check_block_colliderect(blocks)
-
             if focus_point:
-                self.view_box.x = p1.x * self.px_in_m - self.view_box.w // 2
-                self.view_box.y = p1.y * self.px_in_m - self.view_box.h // 2
+                self.view_box.x = p1.x * px_in_m - self.view_box.w // 2
+                self.view_box.y = p1.y * px_in_m - self.view_box.h // 2
 
             mouse.x, mouse.y = pygame.mouse.get_pos()
-            mouse.x = (self.view_box.x + mouse.x / self.view_box.zoom) // self.px_in_m
-            mouse.y = (self.view_box.y + mouse.y / self.view_box.zoom) // self.px_in_m
+            mouse.x = (self.view_box.x + mouse.x / self.view_box.zoom) // px_in_m
+            mouse.y = (self.view_box.y + mouse.y / self.view_box.zoom) // px_in_m
 
             if pygame.mouse.get_pressed()[0]:
                 if mouse_force not in p1.forces:
@@ -189,3 +185,10 @@ class simulator:
             **kwargs
     ):
         pass
+
+    def _log(self, msg, indent=1):
+        if self.log:
+            print("\t"*indent,msg, sep="")
+
+    def _log_header(self, msg):
+        self._log(msg, indent=0)
