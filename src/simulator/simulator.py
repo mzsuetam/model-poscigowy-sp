@@ -83,7 +83,7 @@ class simulator:
         print("Initializing simulation...")
 
         focus_point = -1
-        df_history = pd.DataFrame(columns=["id", "t", "x", "y", "v_x", "v_y", "a_x", "a_y"])
+        df_history = pd.DataFrame(columns=["id", "x", "y", "v_x", "v_y", "a_x", "a_y"])
         frame = -1
         game_run = True
         game_clock = pygame.time.Clock()
@@ -97,8 +97,9 @@ class simulator:
                 if self._is_log:
                     self._log_header(f"t = {t} [s]")
                     self._log(self._view_box)
-                    for p in self._simulation_elements['points']:
-                        self._log(p)
+                    for pt in self._simulation_elements['points']:
+                        if pt.show:
+                            self._log(pt)
 
             # PYGAME_EVENTS_CHECKING
             for event in pygame.event.get():  # testing all events in pygame
@@ -147,9 +148,10 @@ class simulator:
                 c.update(t)
 
             # POINTS_UPDATE
-            for i, pt in enumerate(self._simulation_elements['points']):
-                stats = pt.__dict__()
-                df_history = pd.concat([df_history, pd.DataFrame(stats, index=[t])], ignore_index=True)
+            for pt in self._simulation_elements['points']:
+                if pt.show:
+                    stats = pt.__dict__()
+                    df_history = pd.concat([df_history, pd.DataFrame(stats, index=[t])])
 
                 pt.update_position(1 / self._FPS, self._simulation_elements['blocks'])
 
@@ -157,6 +159,7 @@ class simulator:
             self._draw_window()
 
         pygame.quit()
+
         return df_history
 
     def add_block(self, x, y, w=1, h=1, color=colors.DARKGRAY):

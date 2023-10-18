@@ -2,8 +2,9 @@ import numpy as np
 import pygame
 
 from src.simulator.objects.force import Force
-from src.simulator.objects.vect_2d import Vect2d
+from src.simulator.utils.vect_2d import Vect2d
 from src.simulator.utils import colors
+from src.simulator.utils.colors import Color
 from src.simulator.utils.constants import px_in_m, eps_px, v_eps
 
 
@@ -18,36 +19,37 @@ class PointMass:
                  show=True,
                  friction_factor=5e-2,
                  ):
-        self.id = id
+        self.id: int = id
 
-        self.x = x  # [m]
-        self.y = y  # [m]
-        self.radius = radius  # [m]
-        self.color = color
-        self.show = show
+        self.x: float = x  # [m]
+        self.y: float = y  # [m]
+        self.radius: float = radius  # [m]
+        self.color: Color = color
+        self.show: bool = show
 
-        self.bb = pygame.Rect(0, 0, 0, 0)
+        self.bb: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
-        self.v = Vect2d(0, 0)
-        self.a = Vect2d(0, 0)
+        self.v: Vect2d = Vect2d(0, 0)
+        self.a: Vect2d = Vect2d(0, 0)
 
         if m <= 0:
             raise ValueError()
-        self.m = m
+        self.m: float = m
 
         self.forces: [Force] = []
 
-        self.friction_factor = friction_factor
+        self.friction_factor: float = friction_factor
 
     @property
-    def center(self):
+    def center(self) -> Vect2d:
         return Vect2d(self.x, self.y)
 
-    def update_position(self, t, blocks):
+    def update_position(self, t, blocks) -> None:
 
         friction = self.friction_factor * self.m * 9.81
 
-        fw = Force(Vect2d(0, 0))
+        force = Force(Vect2d(0, 0))
+        fw = force
         for f in self.forces:
             fw += f
 
@@ -92,7 +94,7 @@ class PointMass:
         new_v_x, new_v_y = abs(new_v) > v_eps
         self.v = new_v * Vect2d(int(new_v_x), int(new_v_y))
 
-    def check_block_colliderect(self, blocks):
+    def check_block_colliderect(self, blocks) -> None:
         for bl in blocks:
             if self.bb.colliderect(bl.bb):
                 if abs(self.bb.top - bl.bb.bottom) < eps_px:
@@ -112,25 +114,25 @@ class PointMass:
                     self.v.x *= 0
                     self.x = (bl.bb.right + self.bb.w // 2) / px_in_m
 
-    def update_bb(self):
+    def update_bb(self) -> None:
         self.bb.x = (self.x - self.radius) * px_in_m
         self.bb.y = (self.y - self.radius) * px_in_m
         self.bb.w = self.radius * 2 * px_in_m
         self.bb.h = self.radius * 2 * px_in_m
 
-    def attach_force(self, force: Force):
+    def attach_force(self, force: Force) -> None:
         force.anchor = self
         self.forces.append(force)
 
-    def detach_force(self, force: Force):
+    def detach_force(self, force: Force) -> None:
         force.release_anchor()
         self.forces.remove(force)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (f"PointMass(id={self.id}, x={round(self.x, 2)}, y={round(self.y, 2)}),"
                 f" v={self.v}, a={self.a}")
 
-    def __dict__(self):
+    def __dict__(self) -> dict:
         return {
             "id": self.id,
             "x": self.x,

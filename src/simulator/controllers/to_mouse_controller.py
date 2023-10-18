@@ -1,7 +1,7 @@
 import pygame
 from src.simulator.controllers.base_controller import BaseController
 from src.simulator.objects.force import Force
-from src.simulator.objects.vect_2d import Vect2d
+from src.simulator.utils.vect_2d import Vect2d
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.objects.block import Block
 
@@ -17,7 +17,7 @@ class ToMouseController(BaseController):
         self._managed_point: PointMass = managed_point
         self._mouse_point: PointMass = mouse_point
         self._blocks: [Block] = blocks
-        self._mouse = mosue
+        self._mouse: pygame.mouse = mosue
 
         self.f: Force = Force(Vect2d(0, 0))
         self._managed_point.attach_force(self.f)

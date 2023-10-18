@@ -1,5 +1,5 @@
 class Vect2d:
-    def __init__(self, x, y):
+    def __init__(self, x, y) -> None:
         self.x = x
         self.y = y
 
@@ -65,7 +65,7 @@ class Vect2d:
         if type(other) is Vect2d:
             return other.__ge__(self)
 
-    def compare(self, other):
+    def compare(self, other) -> (int, int):
         gt_x, gt_y = self > other
         eq_x, eq_y = self == other
 

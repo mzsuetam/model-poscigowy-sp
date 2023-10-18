@@ -1,6 +1,6 @@
 
-px_in_m = 50
+px_in_m: int = 50
 
-eps_px = 10 # [px]
+eps_px: float = 10 # [px]
 
-v_eps = 1e-2 # [m/s]
+v_eps: float = 1e-2 # [m/s]

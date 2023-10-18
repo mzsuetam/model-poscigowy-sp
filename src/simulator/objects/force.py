@@ -1,27 +1,28 @@
-from .vect_2d import Vect2d
-import math
+from src.simulator.utils.vect_2d import Vect2d
+
 
 class Force:
     def __init__(
             self,
-            val = Vect2d(0,0)):
+            val = Vect2d(0,0)
+    ) -> None:
         self._anchor = None
-        self.val = val
+        self.val: Vect2d = val
 
     @property
     def anchor(self):
         return self._anchor
 
     @anchor.setter
-    def anchor(self, point_mass):
+    def anchor(self, point_mass) -> None:
         if self._anchor is not None:
             raise RuntimeError()
         self._anchor = point_mass
 
-    def release_anchor(self):
+    def release_anchor(self) -> None:
         self._anchor = None
 
-    def pull_to(self, point_mass):
+    def pull_to(self, point_mass) -> None:
         end = point_mass.center
         start = self.anchor.center
         self.val = end - start
@@ -43,22 +44,3 @@ class Force:
         if type(other) is int or type(other) is float:
             return Force(self.val*other)
         raise RuntimeError()
-
-
-class GravityFroce(Force):
-    G = 6.67 * 1e-2 # * 10e-11 who cares lol
-
-    def __init__(
-            self,
-            val = Vect2d(0,0)):
-        super().__init__(val)
-
-    def pull_to(self, point_mass):
-        M1 = self.anchor.m
-        M2 = point_mass.m
-
-        end = point_mass.center
-        start = self.anchor.center
-        R = end - start
-
-        self.val = R * abs(R) * self.G * M1 * M2
