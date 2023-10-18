@@ -5,7 +5,7 @@ from src.simulator.objects.point_mass import PointMass
 from src.simulator.objects.force import Force
 from src.simulator.objects.block import Block
 from src.simulator.view_box import ViewBox
-from src.simulator.utils import colors 
+from src.simulator.utils import colors
 from src.simulator.utils.constants import px_in_m
 
 
@@ -16,108 +16,88 @@ class simulator:
                  window_h=960,
                  canvas_w=None,
                  canvas_h=None,
-                 log=False
+                 log=False,
                  ):
-        self.FPS = 60
+        self._FPS = 60
 
-        self.root_w, self.root_w = window_w, window_h
-        self.root = pygame.display.set_mode((window_w, window_h))
+        self._root_w, self._root_h = window_w, window_h
+        self._root = pygame.display.set_mode((window_w, window_h))
 
-        canvas_w = window_w * 2 if canvas_w is None else window_w
-        canvas_h = window_w * 2 if canvas_h is None else window_h
-        self.canvas = pygame.Surface((canvas_w, canvas_h))
+        canvas_w = 50 * px_in_m if canvas_w is None else window_w
+        canvas_h = 50 * px_in_m if canvas_h is None else window_h
+        self._canvas = pygame.Surface((canvas_w, canvas_h))
 
-        self.view_box = ViewBox(self.root, 0, 0, window_w, window_h)
+        self._view_box = ViewBox(self._canvas, 0, 0, window_w, window_h)
 
-        self.log = log
+        self._is_log = log
 
-        self.simulation_elements = {
+        self._simulation_elements = {
             "points": [],
             "blocks": []
         }
 
+        self._mouse_point = self.add_point_mass(10, 10, show=False)  # mouse point
+
+        self.focusable_points = []
+
+        self._controllers = []
+
+        self.add_block(0, 0, h=self._canvas.get_height() / px_in_m)
+        self.add_block(self._canvas.get_width() / px_in_m - 1, 0, h=self._canvas.get_height() / px_in_m)
+        self.add_block(0, 0, w=self._canvas.get_width() / px_in_m)
+        self.add_block(0, self._canvas.get_height() / px_in_m - 1, w=self._canvas.get_width() / px_in_m)
+
         pygame.display.set_caption("Model Pościgowy")
 
-    def _draw_window(self, points, blocks):
+    def _draw_window(self):
         # draw background
-        self.canvas.fill(colors.BLACK)
-        for i, x in enumerate(range(0, self.canvas.get_width(), px_in_m)):
-            if self.view_box.zoom >= 1 or i % 10 == 0:
-                pygame.draw.line(self.canvas, colors.GRAY, (x, 0), (x, self.canvas.get_height()),
+        self._canvas.fill(colors.BLACK)
+        for i, x in enumerate(range(0, self._canvas.get_width(), px_in_m)):
+            if self._view_box.zoom >= 1 or i % 10 == 0:
+                pygame.draw.line(self._canvas, colors.GRAY, (x, 0), (x, self._canvas.get_height()),
                                  1 if i % 10 != 0 else 3)
-        for i, y in enumerate(range(0, self.canvas.get_height(), px_in_m)):
-            if self.view_box.zoom >= 1 or i % 10 == 0:
-                pygame.draw.line(self.canvas, colors.GRAY, (0, y), (self.canvas.get_width(), y),
+        for i, y in enumerate(range(0, self._canvas.get_height(), px_in_m)):
+            if self._view_box.zoom >= 1 or i % 10 == 0:
+                pygame.draw.line(self._canvas, colors.GRAY, (0, y), (self._canvas.get_width(), y),
                                  1 if i % 10 != 0 else 3)
 
         # plot blocks
-        for bl in blocks:
-            pygame.draw.rect(self.canvas, bl.color, bl.bb)
+        for bl in self._simulation_elements['blocks']:
+            pygame.draw.rect(self._canvas, bl.color, bl.bb)
 
         # plot points
-        for pt in points:
+        for pt in self._simulation_elements['points']:
             center = (int(pt.x * px_in_m), int(pt.y * px_in_m))
             # pygame.draw.rect(canvas, (255,255,0), pt.bb) # bounding box
-            pygame.draw.circle(self.canvas, pt.color, center, pt.radius * px_in_m)
+            if pt.show:
+                pygame.draw.circle(self._canvas, pt.color, center, pt.radius * px_in_m)
 
         # draw canvas on root
-        vb = self.view_box.get_subsurface(self.canvas)
-        scaled_vb = pygame.transform.scale(vb, (self.root.get_width(), self.root.get_height()))
-        self.root.blit(scaled_vb, (0, 0))
+        vb = self._view_box.get_subsurface(self._canvas)
+        scaled_vb = pygame.transform.scale(vb, (self._root.get_width(), self._root.get_height()))
+        self._root.blit(scaled_vb, (0, 0))
 
         pygame.display.update()
 
-    def simulate(self):
+    def start(self):
         print("Initializing simulation...")
-        mouse = PointMass(0, 0)
-        points = []
-        blocks = []
 
-        wall_w = Block(0, 0, h=self.canvas.get_height() / px_in_m)
-        blocks.append(wall_w)
-        wall_e = Block(self.canvas.get_width() / px_in_m - 1, 0, h=self.canvas.get_height() / px_in_m)
-        blocks.append(wall_e)
-        wall_n = Block(0, 0, w=self.canvas.get_width() / px_in_m)
-        blocks.append(wall_n)
-        wall_s = Block(0, self.canvas.get_height() / px_in_m - 1, w=self.canvas.get_width() / px_in_m)
-        blocks.append(wall_s)
-
-        b1 = Block(15, 9, h=2)
-        blocks.append(b1)
-
-        p1 = PointMass(10, 10, color=colors.RED)
-        # p2 = PointMass(5, 10, color=RED)
-        points.append(p1)
-        # points.append(p2)
-
-        mouse_force = Force()
-        # f1 = Force(Vect2d(9.81*5e-2,0))
-        # f1 = Force(Vect2d(,0))
-        # p1.attach_force(f1)
-
-        # f2 = GravityFroce()
-        # f3 = GravityFroce()
-        # p2.attach_force(f2)
-        # p1.attach_force(f3)
-        #
-        # p1.v.y = 1
-        # p2.v.y = -1
-
-        focus_point = True
+        focus_point = -1
         df_history = pd.DataFrame(columns=["id", "t", "x", "y", "v_x", "v_y", "a_x", "a_y"])
         frame = -1
         game_run = True
         game_clock = pygame.time.Clock()
+
         print("Starting simulation...")
         while game_run:  # infinite loop in which all events are being checked
             frame += 1
-            game_clock.tick(self.FPS)  # controlling speed of main_loop
-            t = frame / float(self.FPS)
+            game_clock.tick(self._FPS)  # controlling speed of main_loop
+            t = frame / float(self._FPS)
             if t % 1 == 0:
-                if self.log:
+                if self._is_log:
                     self._log_header(f"t = {t} [s]")
-                    self._log(self.view_box)
-                    for p in points:
+                    self._log(self._view_box)
+                    for p in self._simulation_elements['points']:
                         self._log(p)
 
             # PYGAME_EVENTS_CHECKING
@@ -132,63 +112,101 @@ class simulator:
                         break
                 if event.type == pygame.MOUSEMOTION:
                     if pygame.mouse.get_pressed()[2]:  # 0-lmb, 1-mmb, 2-pmb
-                        focus_point = False
+                        focus_point = -1
                         dx, dy = pygame.mouse.get_rel()
-                        # @FIXME: moving canvas makes 'jumps'
-                        self.view_box.x -= dx / self.view_box.zoom
-                        self.view_box.y -= dy / self.view_box.zoom
+                        self._view_box.x -= dx / self._view_box.zoom
+                        self._view_box.y -= dy / self._view_box.zoom
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if pygame.mouse.get_pressed()[1]:  # 0-lmb, 1-mmb, 2-pmb
-                        focus_point = not focus_point
-
+                        # next focus point
+                        if focus_point + 1 < len(self.focusable_points):
+                            focus_point += 1
+                        else:
+                            focus_point = -1
                 if event.type == pygame.MOUSEWHEEL:
                     # self.view_box.zoom += event.y * 0.1
                     if event.y > 0:
-                        self.view_box.zoom /= 1.1
+                        self._view_box.zoom /= 1.1
                     else:
-                        self.view_box.zoom *= 1.1
+                        self._view_box.zoom *= 1.1
 
-            if focus_point:
-                self.view_box.x = p1.x * px_in_m - self.view_box.w // 2
-                self.view_box.y = p1.y * px_in_m - self.view_box.h // 2
+            # FOCUS_POINT
+            if focus_point != -1:
+                self._view_box.x = (self.focusable_points[focus_point].x * px_in_m
+                                    - self._view_box.w // 2)
+                self._view_box.y = (self.focusable_points[focus_point].y * px_in_m
+                                    - self._view_box.h // 2)
 
-            mouse.x, mouse.y = pygame.mouse.get_pos()
-            mouse.x = (self.view_box.x + mouse.x / self.view_box.zoom) // px_in_m
-            mouse.y = (self.view_box.y + mouse.y / self.view_box.zoom) // px_in_m
+            # MOUSE_POSITION
+            self._mouse_point.x, self._mouse_point.y = pygame.mouse.get_pos()
+            self._mouse_point.x = (self._view_box.x + self._mouse_point.x / self._view_box.zoom) / px_in_m
+            self._mouse_point.y = (self._view_box.y + self._mouse_point.y / self._view_box.zoom) / px_in_m
 
-            if pygame.mouse.get_pressed()[0]:
-                if mouse_force not in p1.forces:
-                    p1.attach_force(mouse_force)
-                mouse_force.pull_to(mouse)
-            elif mouse_force in p1.forces:
-                p1.detach_force(mouse_force)
+            # CONTROLLERS_UPDATE
+            for c in self._controllers:
+                c.update(t)
 
-            # f2.pull_to(p1)
-            # f3.pull_to(p2)
-
-            for i, pt in enumerate(points):
+            # POINTS_UPDATE
+            for i, pt in enumerate(self._simulation_elements['points']):
                 stats = pt.__dict__()
-                stats["id"] = i
-                stats["t"] = t
-                df_history = pd.concat([df_history, pd.DataFrame(stats, index=[0])], ignore_index=True)
+                df_history = pd.concat([df_history, pd.DataFrame(stats, index=[t])], ignore_index=True)
 
-                pt.update_position(1 / self.FPS, blocks)
+                pt.update_position(1 / self._FPS, self._simulation_elements['blocks'])
 
-            self._draw_window(points, blocks)
+            # WINDOW_DRAW
+            self._draw_window()
 
         pygame.quit()
         return df_history
 
+    def add_block(self, x, y, w=1, h=1, color=colors.DARKGRAY):
+        id = len(self._simulation_elements['blocks'])
+        bl = Block(id, x, y, w, h, color)
+        self._simulation_elements['blocks'].append(bl)
+        return bl
+
     def add_point_mass(
-            x=None,
-            y=None,
-            **kwargs
+            self,
+            x=0,
+            y=0,
+            m=1,
+            radius=0.2,
+            color=colors.RED,
+            show=True,
+            friction_factor=5e-2,
+            enable_focus=False
     ):
-        pass
+        id = len(self._simulation_elements['points'])
+        pt = PointMass(
+            id=id,
+            x=x,
+            y=y,
+            m=m,
+            radius=radius,
+            color=color,
+            show=show,
+            friction_factor=friction_factor
+        )
+        self._simulation_elements['points'].append(pt)
+        if enable_focus:
+            self.focusable_points.append(pt)
+        return pt
+
+    def get_mouse_point(self):
+        return self._mouse_point
+
+    def get_mouse(self):
+        return pygame.mouse
+
+    def get_blocks(self):
+        return self._simulation_elements['blocks']
+
+    def add_controller(self, controller):
+        self._controllers.append(controller)
 
     def _log(self, msg, indent=1):
-        if self.log:
-            print("\t"*indent,msg, sep="")
+        if self._is_log:
+            print("\t" * indent, msg, sep="")
 
     def _log_header(self, msg):
         self._log(msg, indent=0)

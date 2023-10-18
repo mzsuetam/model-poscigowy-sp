@@ -3,10 +3,10 @@ class ViewBox:
     def __init__(self, canvas, x, y, w, h):
         self.canvas = canvas
 
-        self._x = x
-        self._y = y
-        self.w = w
-        self.h = h
+        self._x = x # [px]
+        self._y = y # [px]
+        self.w = w # [px]
+        self.h = h # [px]
 
         self._zoom = 1
 

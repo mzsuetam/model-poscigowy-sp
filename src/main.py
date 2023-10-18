@@ -1,18 +1,29 @@
-import pygame
 import matplotlib.pyplot as plt
-import pandas as pd
 
 from src.simulator.simulator import simulator
+
+from src.simulator.controllers.to_mouse_controller import ToMouseController
 
 
 def main():
     sim = simulator(log=True)
-    df_history = sim.simulate()
 
+    sim.add_block(15, 9, h=2)
+
+    p1 = sim.add_point_mass(10, 10, enable_focus=True)
+
+    blocks = sim.get_blocks()
+
+    sim.add_block(9,15, color=(255,0,0))
+
+    mc = ToMouseController(p1, sim.get_mouse_point(), blocks, sim.get_mouse())
+    sim.add_controller(mc)
+
+    df_history = sim.start()
 
     # df_history.to_csv("history.csv", index=False)
 
-    df_hist_1 = df_history[df_history['id']==0]
+    df_hist_1 = df_history[df_history['id'] == 0]
     fig, axs = plt.subplots(3, 2)
     fig.suptitle("Point mass simulation")
     axs[0][0].plot(df_hist_1["t"], df_hist_1["x"])
@@ -40,6 +51,7 @@ def main():
     axs[2][1].set_ylabel("a_y [m/s^2]")
     axs[2][1].grid()
     # plt.show()
+
 
 if __name__ == "__main__":
     main()

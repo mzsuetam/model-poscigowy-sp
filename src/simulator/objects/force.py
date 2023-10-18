@@ -39,6 +39,11 @@ class Force:
             return Force(self.val/other)
         raise RuntimeError()
 
+    def __mul__(self, other):
+        if type(other) is int or type(other) is float:
+            return Force(self.val*other)
+        raise RuntimeError()
+
 
 class GravityFroce(Force):
     G = 6.67 * 1e-2 # * 10e-11 who cares lol
