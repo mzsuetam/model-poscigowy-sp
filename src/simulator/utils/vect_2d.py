@@ -37,21 +37,21 @@ class Vect2d:
 
     def __eq__(self, other):
         if type(other) is int or type(other) is float:
-            return (self.x == other, self.y == other)
+            return Vect2d(self.x == other, self.y == other)
         if type(other) is Vect2d:
-            return (self.x == other.x, self.y == other.y)
+            return Vect2d(self.x == other.x, self.y == other.y)
 
     def __gt__(self, other):
         if type(other) is int or type(other) is float:
-            return (self.x > other, self.y > other)
+            return Vect2d(self.x > other, self.y > other)
         if type(other) is Vect2d:
-            return (self.x > other.x, self.y > other.y)
+            return Vect2d(self.x > other.x, self.y > other.y)
 
     def __ge__(self, other):
         if type(other) is int or type(other) is float:
-            return (self.x >= other, self.y >= other)
+            return Vect2d(self.x >= other, self.y >= other)
         if type(other) is Vect2d:
-            return (self.x >= other.x, self.y >= other.y)
+            return Vect2d(self.x >= other.x, self.y >= other.y)
 
     def __lt__(self, other):
         if type(other) is int or type(other) is float:
@@ -65,6 +65,9 @@ class Vect2d:
         if type(other) is Vect2d:
             return other.__ge__(self)
 
+    def copy(self):
+        return Vect2d(self.x, self.y)
+
     def compare(self, other) -> (int, int):
         gt_x, gt_y = self > other
         eq_x, eq_y = self == other
@@ -76,6 +79,12 @@ class Vect2d:
         c_y = 0 if eq_y else gt_y
 
         return (c_x, c_y)
+
+    def __tuple__(self) -> (float, float):
+        return (self.x, self.y)
+
+    def as_ints(self) -> (int, int):
+        return Vect2d(int(self.x), int(self.y))
 
     def __iter__(self):
         yield self.x

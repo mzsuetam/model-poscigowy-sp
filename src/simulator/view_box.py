@@ -49,4 +49,4 @@ class ViewBox:
         self._zoom = value
 
     def __str__(self):
-        return f"ViewBox(x={self._x}, y={self._y}, w={self.w}, h={self.h}, zoom={self._zoom})"
+        return f"ViewBox(x={self._x}, y={self._y}, w={self.w}, h={self.h}, zoom={round(self._zoom,1)})"

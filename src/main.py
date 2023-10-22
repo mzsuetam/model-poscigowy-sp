@@ -55,7 +55,7 @@ def main():
     df_history = sim.start()
 
     # df_history.to_csv("history.csv", index=False)
-    plot_history(df_history)
+    # plot_history(df_history)
 
 
 if __name__ == "__main__":

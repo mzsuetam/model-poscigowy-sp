@@ -21,16 +21,16 @@ class Block:
         self.w: float = w  # [m]
         self.h: float = h  # [m]
 
-        self.bb: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._bb: pygame.Rect = pygame.Rect(0, 0, 0, 0)
         self.update_bb()
 
         self.color: Color = color
 
     def update_bb(self) -> None:
-        self.bb.x = self.x * px_in_m
-        self.bb.y = self.y * px_in_m
-        self.bb.w = self.w * px_in_m
-        self.bb.h = self.h * px_in_m
+        self._bb.x = self.x * px_in_m
+        self._bb.y = self.y * px_in_m
+        self._bb.w = self.w * px_in_m
+        self._bb.h = self.h * px_in_m
 
     def __str__(self) -> str:
         return f"Block(id={self.id}, x={self.x}, y={self.y}, w={self.w}, h={self.h}, color={self.color})"

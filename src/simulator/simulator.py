@@ -2,7 +2,6 @@ import pygame
 import pandas as pd
 
 from src.simulator.objects.point_mass import PointMass
-from src.simulator.objects.force import Force
 from src.simulator.objects.block import Block
 from src.simulator.view_box import ViewBox
 from src.simulator.utils import colors
@@ -42,14 +41,14 @@ class simulator:
 
         self._controllers = []
 
-        self.add_block(0, 0, h=self._canvas.get_height() / px_in_m)
-        self.add_block(self._canvas.get_width() / px_in_m - 1, 0, h=self._canvas.get_height() / px_in_m)
-        self.add_block(0, 0, w=self._canvas.get_width() / px_in_m)
-        self.add_block(0, self._canvas.get_height() / px_in_m - 1, w=self._canvas.get_width() / px_in_m)
+        self.add_block(0, 0, h=self._canvas.get_height() // px_in_m)
+        self.add_block(self._canvas.get_width() / px_in_m - 1, 0, h=self._canvas.get_height() // px_in_m)
+        self.add_block(0, 0, w=self._canvas.get_width() // px_in_m)
+        self.add_block(0, self._canvas.get_height() / px_in_m - 1, w=self._canvas.get_width() // px_in_m)
 
         pygame.display.set_caption("Model Pościgowy")
 
-    def _draw_window(self):
+    def _draw_window(self, draw_vectors=False, draw_bb=False):
         # draw background
         self._canvas.fill(colors.BLACK)
         for i, x in enumerate(range(0, self._canvas.get_width(), px_in_m)):
@@ -63,13 +62,19 @@ class simulator:
 
         # plot blocks
         for bl in self._simulation_elements['blocks']:
-            pygame.draw.rect(self._canvas, bl.color, bl.bb)
+            pygame.draw.rect(self._canvas, bl.color, bl._bb)
 
         # plot points
         for pt in self._simulation_elements['points']:
-            center = (int(pt.x * px_in_m), int(pt.y * px_in_m))
-            # pygame.draw.rect(canvas, (255,255,0), pt.bb) # bounding box
+            center = tuple((pt.center * px_in_m).as_ints())
             if pt.show:
+                if draw_vectors:
+                    pygame.draw.line(self._canvas, colors.BLUE, center, tuple(((pt.center + pt._v) * px_in_m).as_ints()),
+                                     2)
+                    pygame.draw.line(self._canvas, colors.GREEN, center,
+                                     tuple(((pt.center + pt.get_acceleration()) * px_in_m).as_ints()), 2)
+                if draw_bb:
+                    pygame.draw.rect(self._canvas, (255, 255, 0), pt._bb)  # bounding box
                 pygame.draw.circle(self._canvas, pt.color, center, pt.radius * px_in_m)
 
         # draw canvas on root
@@ -149,14 +154,17 @@ class simulator:
 
             # POINTS_UPDATE
             for pt in self._simulation_elements['points']:
+                pt.update_position(1 / self._FPS, self._simulation_elements['blocks'])
+
                 if pt.show:
                     stats = pt.__dict__()
                     df_history = pd.concat([df_history, pd.DataFrame(stats, index=[t])])
 
-                pt.update_position(1 / self._FPS, self._simulation_elements['blocks'])
-
             # WINDOW_DRAW
-            self._draw_window()
+            self._draw_window(
+                draw_vectors=True,
+                draw_bb=False
+            )
 
         pygame.quit()
 
