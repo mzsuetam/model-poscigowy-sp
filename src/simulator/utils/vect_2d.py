@@ -16,6 +16,8 @@ class Vect2d:
     def __sub__(self, other):
         if type(other) is Vect2d:
             return Vect2d(self.x - other.x, self.y - other.y)
+        if type(other) is int or type(other) is float:
+            return Vect2d(self.x - other, self.y - other)
         raise RuntimeError()
 
     def __mul__(self, other):
@@ -85,6 +87,9 @@ class Vect2d:
 
     def norm(self):
         return float(np.sqrt(self.x ** 2 + self.y ** 2))
+
+    def distance(self, other):
+        return (self - other).norm()
 
     def __tuple__(self) -> (float, float):
         return (self.x, self.y)

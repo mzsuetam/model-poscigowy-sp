@@ -1,0 +1,60 @@
+{
+  "window": {
+    "w_px": 1600,
+    "h_px": 960
+  },
+  "canvas": {
+    "w": 30,
+    "h": 20
+  },
+  "objects": {
+    "blocks": [
+      {
+        "x": 15,
+        "y": 5,
+        "h": 2
+      },
+      {
+        "x": 15,
+        "y": 10,
+        "h": 2
+      },
+      {
+        "x": 15,
+        "y": 12,
+        "h": 1
+      },
+      {
+        "x": 15,
+        "y": 13,
+        "h": 1
+      }
+    ],
+    "points": [
+      {
+        "name": "destination_point",
+        "x": 28,
+        "y": 18,
+        "color": "pink",
+        "radius": 0.5
+      },
+      {
+        "name": "p1",
+        "x": 10,
+        "y": 10,
+        "enable_focus": true
+      }
+    ]
+  },
+  "controllers":[
+    {
+      "type": "ToMouseController",
+      "managed_point": "p1"
+    },
+    {
+      "type": "AstarController",
+      "managed_point": "p1",
+      "destination_point": "destination_point"
+    }
+  ]
+}

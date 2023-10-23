@@ -73,20 +73,23 @@ class PointMass:
         corr_x, corr_y = -1, -1
         for bl in objects:
             if self._bb.colliderect(bl._bb):
-                if abs(self._bb.top - bl._bb.bottom) < eps_px:
+                if abs(self._bb.top - bl._bb.bottom) < eps_px / 2:
                     # coll from top
                     corr_y = (bl._bb.bottom + self._bb.h // 2) / px_in_m
-                if abs(self._bb.bottom - bl._bb.top) < eps_px:
+                if abs(self._bb.bottom - bl._bb.top) < eps_px / 2:
                     # coll from bottom
                     corr_y = (bl._bb.top - self._bb.h // 2) / px_in_m
-                if abs(self._bb.right - bl._bb.left) < eps_px:
+                if abs(self._bb.right - bl._bb.left) < eps_px / 2:
                     # coll from right
                     corr_x = (bl._bb.left - self._bb.w // 2) / px_in_m
-                if abs(self._bb.left - bl._bb.right) < eps_px:
+                if abs(self._bb.left - bl._bb.right) < eps_px / 2:
                     # coll from left
                     corr_x = (bl._bb.right + self._bb.w // 2) / px_in_m
 
-        return Vect2d(corr_x, corr_y)
+        corr = Vect2d(corr_x, corr_y)
+        if corr_x != -1 and corr_y != -1:
+            pass
+        return corr
 
     def _update_bb(self) -> None:
         self._bb.x = (self.x - self.radius) * px_in_m

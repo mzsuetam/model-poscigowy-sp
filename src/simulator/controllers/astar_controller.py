@@ -1,7 +1,5 @@
-import math
 
 import networkx as nx
-import numpy as np
 
 from src.simulator.controllers.base_graph_controller import BaseGraphController
 from src.simulator.objects.block import Block
@@ -14,7 +12,7 @@ class AstarController(BaseGraphController):
     def __init__(
             self,
             managed_point: PointMass,
-            destination_point: Vect2d,
+            destination_point: Vect2d | PointMass,
             canvas_dim: Vect2d,
             blocks: [Block],
             gap_between_nodes: float = 1 / 2,
@@ -27,7 +25,7 @@ class AstarController(BaseGraphController):
         )
 
         self._managed_point: PointMass = managed_point
-        self._destination_point: Vect2d = destination_point
+        self._destination_point: Vect2d | PointMass = destination_point
         self._meters_ahead: int = steps_ahead
 
         self.f = Vect2d(0, 0)
@@ -61,7 +59,7 @@ class AstarController(BaseGraphController):
         if len(astar_path) > 1:
             next_point = Vect2d(0, 0)
             used_points = 0
-            for i in range(1, int(self._meters_ahead / self._gap_between_nodes)+1):
+            for i in range(1, int(self._meters_ahead / self._gap_between_nodes) + 1):
                 idx = i + 1 if len(astar_path) > i + 1 else -1
                 next_node = astar_path[idx]
                 next_cord = self.node_to_cord(next_node)
@@ -96,13 +94,27 @@ class AstarController(BaseGraphController):
             self.f *= 0
 
     def _get_astar_path(self):
+        dest = None
+        if isinstance(self._destination_point, PointMass):
+            dest = self._destination_point.center
+        elif isinstance(self._destination_point, Vect2d):
+            dest = self._destination_point
+        if dest is None:
+            raise Exception("Invalid destination point type")
+
         astar_path = nx.astar_path(
             self._graph,
-            self.cord_to_node(tuple(self._managed_point.center)),
-            self.cord_to_node(tuple(self._destination_point))
+            self.cord_to_node(
+                tuple(self._managed_point.center),
+                find_closest_for_nonexistent=True
+            ),
+            self.cord_to_node(
+                tuple(dest),
+                find_closest_for_nonexistent=True
+            )
         )
         return astar_path
 
-
-    def __str__(self):
+    @staticmethod
+    def get_type():
         return "AstarController"

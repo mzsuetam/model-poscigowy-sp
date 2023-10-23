@@ -1,6 +1,9 @@
 import pygame
 import pandas as pd
+import json
 
+from simulator.controllers.astar_controller import AstarController
+from simulator.controllers.to_mouse_controller import ToMouseController
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.objects.block import Block
 from src.simulator.utils.vect_2d import Vect2d
@@ -9,7 +12,7 @@ from src.simulator.utils import colors
 from src.simulator.utils.constants import px_in_m
 
 
-class simulator:
+class Simulator:
 
     def __init__(self,
                  window_w=1600, # [px]
@@ -35,6 +38,8 @@ class simulator:
             "points": [],
             "blocks": []
         }
+
+        self._points_by_names = {}
 
         self._mouse_point = self.add_point_mass(10, 10, show=False)  # mouse point
 
@@ -192,7 +197,8 @@ class simulator:
             color=colors.RED,
             show=True,
             friction_factor=5e-2,
-            enable_focus=False
+            enable_focus=False,
+            name=None
     ):
         # @TODO: add check if point
         #  - is not inside block
@@ -209,6 +215,13 @@ class simulator:
             show=show,
             friction_factor=friction_factor
         )
+        if name is not None:
+            if name in self._points_by_names:
+                raise ValueError(f"Point with name '{name}' already exists")
+        else:
+            name = f"point_{id}"
+        self._points_by_names[name] = pt
+
         self._simulation_elements['points'].append(pt)
         if enable_focus:
             self.focusable_points.append(pt)
@@ -217,18 +230,20 @@ class simulator:
     def get_canvas_dim(self):
         return Vect2d(self.canvas_w, self.canvas_h)
 
+    def get_mouse(self):
+        return pygame.mouse
+
     def get_mouse_point(self):
         return self._mouse_point
 
-    def get_mouse(self):
-        return pygame.mouse
+    def get_point_mass_by_name(self, name):
+        return self._points_by_names.get(name)
 
     def get_blocks(self):
         return self._simulation_elements['blocks']
 
     def add_controller(self, controller):
         self._controllers.append(controller)
-        print(f"Added controller: {controller}")
 
     def _log(self, msg, indent=1):
         if self._is_log:
@@ -236,3 +251,89 @@ class simulator:
 
     def _log_header(self, msg):
         self._log(msg, indent=0)
+
+    @staticmethod
+    def from_file(path):
+        if not path.endswith(".json"):
+            raise ValueError("File must be .json")
+
+        try:
+            with open(path, "r") as f:
+                json_txt = f.read()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"File {path} not found")
+
+        config = json.loads(json_txt)
+
+        window_w = config["window"]["w_px"]
+        window_h = config["window"]["h_px"]
+        canvas_w = config["canvas"]["w"]
+        canvas_h = config["canvas"]["h"]
+        sim = Simulator(
+            window_w=window_w,
+            window_h=window_h,
+            canvas_w=canvas_w,
+            canvas_h=canvas_h
+        )
+
+        objects = config["objects"]
+
+        blocks = objects["blocks"]
+        for block in blocks:
+            sim.add_block(
+                block["x"],
+                block["y"],
+                block["w"] if "w" in block else 1,
+                block["h"] if "h" in block else 1,
+                block["color"] if "color" in block else colors.DARKGRAY
+            )
+        print(f"Added blocks ({len(blocks)})")
+
+        points = objects["points"]
+        for point in points:
+            sim.add_point_mass(
+                point["x"],
+                point["y"],
+                point["m"] if "m" in point else 1,
+                point["radius"] if "radius" in point else 0.2,
+                point["color"] if "color" in point else colors.RED,
+                point["show"] if "show" in point else True,
+                point["friction_factor"] if "friction_factor" in point else 5e-2,
+                point["enable_focus"] if "enable_focus" in point else False,
+                point["name"] if "name" in point else None
+            )
+            print(f"Added point {point['name']} at ({point['x']}, {point['y']})")
+
+        controllers = config["controllers"]
+        for controller in controllers:
+            if controller["type"] == ToMouseController.get_type():
+                managed_point = sim.get_point_mass_by_name(controller["managed_point"])
+                mouse_point = sim.get_mouse_point()
+                mouse = sim.get_mouse()
+                sim.add_controller(
+                    ToMouseController(
+                        managed_point,
+                        mouse_point,
+                        mouse
+                    )
+                )
+            elif controller["type"] == AstarController.get_type():
+                managed_point = sim.get_point_mass_by_name(controller["managed_point"])
+                # destination point object or string
+                if isinstance(controller["destination_point"], str):
+                    destination_point = sim.get_point_mass_by_name(controller["destination_point"])
+                else:
+                    destination_point = Vect2d(controller["destination_point"]["x"], controller["destination_point"]["y"])
+                gap_between_nodes = controller["gap_between_nodes"] if "gap_between_nodes" in controller else 1 / 2
+                sim.add_controller(
+                    AstarController(
+                        managed_point,
+                        destination_point,
+                        sim.get_canvas_dim(),
+                        sim.get_blocks(),
+                        gap_between_nodes=gap_between_nodes
+                    )
+                )
+            print(f"Added controller: {controller['type']}")
+
+        return sim

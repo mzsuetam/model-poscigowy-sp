@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from src.simulator.controllers.astar_controller import AstarController
-from src.simulator.simulator import simulator
+from src.simulator.simulator import Simulator
 
 from src.simulator.controllers.to_mouse_controller import ToMouseController
 from src.simulator.utils.vect_2d import Vect2d
@@ -42,30 +42,28 @@ def plot_history(df_history):
 
 
 def main():
-    sim = simulator(
-        # canvas_w=30,
-        # canvas_h=30
-    )
+    # sim = Simulator(
+    #     # canvas_w=30,
+    #     # canvas_h=30
+    # )
 
-    sim.add_block(15, 5, h=2)
+    sim = Simulator.from_file('assets/map1.json')
 
-    p1 = sim.add_point_mass(10, 10, enable_focus=True)
+    # p1 = sim.get_point_mass_by_name("p1")
 
-    blocks = sim.get_blocks()
-
-    sim.add_block(9, 15)
-
-    mc = ToMouseController(p1, sim.get_mouse_point(), blocks, sim.get_mouse())
-    sim.add_controller(mc)
-
-    bgc = AstarController(
-        p1,
-        Vect2d(25, 25),
-        sim.get_canvas_dim(),
-        blocks,
-        gap_between_nodes=1/2
-    )
-    sim.add_controller(bgc)
+    # blocks = sim.get_blocks()
+    #
+    # mc = ToMouseController(p1, sim.get_mouse_point(), blocks, sim.get_mouse())
+    # sim.add_controller(mc)
+    #
+    # ac = AstarController(
+    #     p1,
+    #     Vect2d(25, 25),
+    #     sim.get_canvas_dim(),
+    #     blocks,
+    #     gap_between_nodes=1/2
+    # )
+    # sim.add_controller(ac)
 
     sim.start()
 

@@ -29,8 +29,8 @@ class BaseGraphController(BaseController):
 
         def is_inside(node, block):
             x, y = node
-            is_in_x = block.x < x * self._gap_between_nodes < block.x + block.w
-            is_in_y = block.y < y * self._gap_between_nodes < block.y + block.h
+            is_in_x = block.x <= x * self._gap_between_nodes <= block.x + block.w
+            is_in_y = block.y <= y * self._gap_between_nodes <= block.y + block.h
             # is_in_y = self._canvas_dim.y - block.y - block.h <= y * self._step <= self._canvas_dim.y - block.y
             return is_in_x and is_in_y
 
@@ -97,8 +97,14 @@ class BaseGraphController(BaseController):
         if fig is not None:
             fig.show()
 
-    def cord_to_node(self, cord: tuple[float, float]) -> tuple[int, int]:
-        return int(cord[0] / self._gap_between_nodes), int(cord[1] / self._gap_between_nodes)
+    def cord_to_node(self, cord: tuple[float, float], find_closest_for_nonexistent=False) -> tuple[int, int]:
+        calculated_node = int(cord[0] / self._gap_between_nodes), int(cord[1] / self._gap_between_nodes)
+
+        if find_closest_for_nonexistent and calculated_node not in self._graph.nodes:
+            closest_node = min(self._graph.nodes, key=lambda n: Vect2d(*n).distance(Vect2d(*calculated_node)))
+            return closest_node
+
+        return calculated_node
 
     def node_to_cord(self, node: tuple[int, int]) -> tuple[float, float]:
         return (node[0] * self._gap_between_nodes, node[1] * self._gap_between_nodes)

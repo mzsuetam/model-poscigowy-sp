@@ -10,13 +10,11 @@ class ToMouseController(BaseController):
             self,
             managed_point: PointMass,
             mouse_point: PointMass,
-            blocks: [Block],
             mosue: pygame.mouse
     ):
         super().__init__()
         self._managed_point: PointMass = managed_point
         self._mouse_point: PointMass = mouse_point
-        self._blocks: [Block] = blocks
         self._mouse: pygame.mouse = mosue
 
         self.f_act = False
@@ -38,5 +36,6 @@ class ToMouseController(BaseController):
                 self.f_act = False
                 self.f *= 0
 
-    def __str__(self):
+    @staticmethod
+    def get_type():
         return "ToMouseController"
