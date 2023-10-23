@@ -1,14 +1,15 @@
 import matplotlib.pyplot as plt
 
+from src.simulator.controllers.base_graph_controller import BaseGraphController
 from src.simulator.simulator import simulator
-from src.simulator.utils import colors
 
 from src.simulator.controllers.to_mouse_controller import ToMouseController
+
 
 def plot_history(df_history):
     df_history = df_history.groupby("id")
 
-    fig, axs = plt.subplots(3, 2, figsize=(10,10), sharex=True)
+    fig, axs = plt.subplots(3, 2, figsize=(10, 10), sharex=True)
 
     fig.suptitle("Point mass simulation")
     df_history["x"].plot(ax=axs[0][0])
@@ -38,8 +39,12 @@ def plot_history(df_history):
 
     plt.show()
 
+
 def main():
-    sim = simulator(log=True)
+    sim = simulator(
+        # canvas_w=20,
+        # canvas_h=20
+    )
 
     sim.add_block(15, 5, h=2)
 
@@ -47,12 +52,15 @@ def main():
 
     blocks = sim.get_blocks()
 
-    sim.add_block(9,15)
+    sim.add_block(9, 15)
 
     mc = ToMouseController(p1, sim.get_mouse_point(), blocks, sim.get_mouse())
     sim.add_controller(mc)
 
-    df_history = sim.start()
+    bgc = BaseGraphController(sim.get_canvas_dim(), blocks)
+    sim.add_controller(bgc)
+
+    sim.start()
 
     # df_history.to_csv("history.csv", index=False)
     # plot_history(df_history)

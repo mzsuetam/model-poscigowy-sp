@@ -3,6 +3,7 @@ import pandas as pd
 
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.objects.block import Block
+from src.simulator.utils.vect_2d import Vect2d
 from src.simulator.view_box import ViewBox
 from src.simulator.utils import colors
 from src.simulator.utils.constants import px_in_m
@@ -11,24 +12,24 @@ from src.simulator.utils.constants import px_in_m
 class simulator:
 
     def __init__(self,
-                 window_w=1600,
-                 window_h=960,
-                 canvas_w=None,
-                 canvas_h=None,
-                 log=False,
+                 window_w=1600, # [px]
+                 window_h=960,  # [px]
+                 canvas_w=None, # [m]
+                 canvas_h=None, # [m]
                  ):
         self._FPS = 60
 
-        self._root_w, self._root_h = window_w, window_h
+        self._root_w = window_w # [px]
+        self._root_h = window_h # [px]
         self._root = pygame.display.set_mode((window_w, window_h))
 
-        canvas_w = 50 * px_in_m if canvas_w is None else window_w
-        canvas_h = 50 * px_in_m if canvas_h is None else window_h
-        self._canvas = pygame.Surface((canvas_w, canvas_h))
+        self.canvas_w = 50 if canvas_w is None else canvas_w # [m]
+        self.canvas_h = 50 if canvas_h is None else canvas_h # [m]
+        self._canvas = pygame.Surface((self.canvas_w * px_in_m, self.canvas_h * px_in_m))
 
         self._view_box = ViewBox(self._canvas, 0, 0, window_w, window_h)
 
-        self._is_log = log
+        self._is_log = True
 
         self._simulation_elements = {
             "points": [],
@@ -79,12 +80,14 @@ class simulator:
 
         # draw canvas on root
         vb = self._view_box.get_subsurface(self._canvas)
+        # @FIXME: too small canvas is oddly streched
         scaled_vb = pygame.transform.scale(vb, (self._root.get_width(), self._root.get_height()))
         self._root.blit(scaled_vb, (0, 0))
 
         pygame.display.update()
 
-    def start(self):
+    def start(self, log=False):
+        self._is_log = log
         print("Initializing simulation...")
 
         focus_point = -1
@@ -131,7 +134,7 @@ class simulator:
                             focus_point = -1
                 if event.type == pygame.MOUSEWHEEL:
                     # self.view_box.zoom += event.y * 0.1
-                    if event.y > 0:
+                    if event.y < 0:
                         self._view_box.zoom /= 1.1
                     else:
                         self._view_box.zoom *= 1.1
@@ -171,6 +174,10 @@ class simulator:
         return df_history
 
     def add_block(self, x, y, w=1, h=1, color=colors.DARKGRAY):
+        # @TODO: add check if block
+        #  - is not inside block
+        #  - is inside canvas
+
         id = len(self._simulation_elements['blocks'])
         bl = Block(id, x, y, w, h, color)
         self._simulation_elements['blocks'].append(bl)
@@ -187,6 +194,10 @@ class simulator:
             friction_factor=5e-2,
             enable_focus=False
     ):
+        # @TODO: add check if point
+        #  - is not inside block
+        #  - is inside canvas
+
         id = len(self._simulation_elements['points'])
         pt = PointMass(
             id=id,
@@ -202,6 +213,9 @@ class simulator:
         if enable_focus:
             self.focusable_points.append(pt)
         return pt
+
+    def get_canvas_dim(self):
+        return Vect2d(self.canvas_w, self.canvas_h)
 
     def get_mouse_point(self):
         return self._mouse_point
