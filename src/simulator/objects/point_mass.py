@@ -125,6 +125,9 @@ class PointMass:
     def subtract_force(self, force: Vect2d) -> None:
         self._f_resultant -= force
 
+    def get_velocity(self) -> Vect2d:
+        return self._v
+
     def get_acceleration(self) -> Vect2d:
         f = self.consult_friction_force(self._f_resultant)
         return f / self.m

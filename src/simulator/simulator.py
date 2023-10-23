@@ -153,7 +153,7 @@ class simulator:
 
             # CONTROLLERS_UPDATE
             for c in self._controllers:
-                c.update(t)
+                c.update(t, 1 / self._FPS)
 
             # POINTS_UPDATE
             for pt in self._simulation_elements['points']:
@@ -228,6 +228,7 @@ class simulator:
 
     def add_controller(self, controller):
         self._controllers.append(controller)
+        print(f"Added controller: {controller}")
 
     def _log(self, msg, indent=1):
         if self._is_log:

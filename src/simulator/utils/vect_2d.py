@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Vect2d:
     def __init__(self, x, y) -> None:
         self.x = x
@@ -80,11 +83,20 @@ class Vect2d:
 
         return (c_x, c_y)
 
+    def norm(self):
+        return float(np.sqrt(self.x ** 2 + self.y ** 2))
+
     def __tuple__(self) -> (float, float):
         return (self.x, self.y)
 
     def as_ints(self) -> (int, int):
         return Vect2d(int(self.x), int(self.y))
+
+    @staticmethod
+    def from_singleton(val):
+        if type(val) is int or type(val) is float:
+            return Vect2d(val, val)
+        raise RuntimeError()
 
     def __iter__(self):
         yield self.x

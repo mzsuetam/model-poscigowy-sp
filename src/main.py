@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 
-from src.simulator.controllers.base_graph_controller import BaseGraphController
+from src.simulator.controllers.astar_controller import AstarController
 from src.simulator.simulator import simulator
 
 from src.simulator.controllers.to_mouse_controller import ToMouseController
+from src.simulator.utils.vect_2d import Vect2d
 
 
 def plot_history(df_history):
@@ -42,8 +43,8 @@ def plot_history(df_history):
 
 def main():
     sim = simulator(
-        # canvas_w=20,
-        # canvas_h=20
+        # canvas_w=30,
+        # canvas_h=30
     )
 
     sim.add_block(15, 5, h=2)
@@ -57,7 +58,13 @@ def main():
     mc = ToMouseController(p1, sim.get_mouse_point(), blocks, sim.get_mouse())
     sim.add_controller(mc)
 
-    bgc = BaseGraphController(sim.get_canvas_dim(), blocks)
+    bgc = AstarController(
+        p1,
+        Vect2d(25, 25),
+        sim.get_canvas_dim(),
+        blocks,
+        gap_between_nodes=1/2
+    )
     sim.add_controller(bgc)
 
     sim.start()
