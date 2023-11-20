@@ -21,11 +21,21 @@ class BaseGraphController(BaseController):
 
         self._graph: nx.Graph = self._init_graph()
 
+        # self.plot_graph()
+
     def _init_graph(self):
         graph = nx.grid_2d_graph(
             self._canvas_dim.x * int(1 / self._gap_between_nodes) + 1,
             self._canvas_dim.y * int(1 / self._gap_between_nodes) + 1
         )
+
+        # add diagonal edges
+        for node in graph.nodes:
+            neighs = graph.neighbors(node)
+            for n1 in neighs:
+                for n2 in neighs:
+                    if n1 != n2 and abs(n1[0] - n2[0]) == 1 and abs(n1[1] - n2[1]) == 1:
+                        graph.add_edge(n1, n2, weight=1.5)
 
         def is_inside(node, block):
             x, y = node

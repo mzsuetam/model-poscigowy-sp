@@ -65,6 +65,12 @@ def main():
     # )
     # sim.add_controller(ac)
 
+    # @TODO:
+    # - pola widzenia
+    # http://ai.berkeley.edu/project_overview.html for guard
+    # - Dijkstra fields for thief (?)
+    # - Project 4: Ghostbusters
+
     sim.start()
 
     # df_history.to_csv("history.csv", index=False)
