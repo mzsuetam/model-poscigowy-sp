@@ -2,6 +2,7 @@ import pygame
 import pandas as pd
 import json
 
+from src.simulator.controllers.vision_controller import VisionController
 from src.simulator.controllers.astar_controller import AstarController
 from src.simulator.controllers.to_mouse_controller import ToMouseController
 from src.simulator.objects.point_mass import PointMass
@@ -330,23 +331,37 @@ class Simulator:
                         mouse
                     )
                 )
-            elif controller["type"] == AstarController.get_type():
+            elif controller["type"] == AstarController.get_type() or \
+                    controller["type"] == VisionController.get_type():
                 managed_point = sim.get_point_mass_by_name(controller["managed_point"])
                 # destination point object or string
                 if isinstance(controller["destination_point"], str):
                     destination_point = sim.get_point_mass_by_name(controller["destination_point"])
                 else:
-                    destination_point = Vect2d(controller["destination_point"]["x"], controller["destination_point"]["y"])
+                    destination_point = Vect2d(controller["destination_point"]["x"],
+                                               controller["destination_point"]["y"])
                 gap_between_nodes = controller["gap_between_nodes"] if "gap_between_nodes" in controller else 1 / 2
-                sim.add_controller(
-                    AstarController(
-                        managed_point,
-                        destination_point,
-                        sim.get_canvas_dim(),
-                        sim.get_blocks(),
-                        gap_between_nodes=gap_between_nodes
+                if controller["type"] == AstarController.get_type():
+                    sim.add_controller(
+                        AstarController(
+                            managed_point,
+                            destination_point,
+                            sim.get_canvas_dim(),
+                            sim.get_blocks(),
+                            gap_between_nodes=gap_between_nodes
+                        )
                     )
-                )
+                elif controller["type"] == VisionController.get_type():
+                    sim.add_controller(
+                        VisionController(
+                            managed_point,
+                            destination_point,
+                            sim.get_canvas_dim(),
+                            sim.get_blocks(),
+                            gap_between_nodes=gap_between_nodes
+                        )
+                    )
+
             print(f"Added controller: {controller['type']}")
 
         return sim

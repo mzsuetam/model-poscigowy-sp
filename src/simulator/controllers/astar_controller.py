@@ -54,6 +54,7 @@ class AstarController(BaseGraphController):
         # fig.show()
 
     def update(self, t, dt) -> None:
+        print("AstarController update")
         astar_path = self._get_astar_path()
 
         if len(astar_path) > 1:
@@ -83,7 +84,7 @@ class AstarController(BaseGraphController):
 
             new_f = desired_a * self._managed_point.m
 
-            # @FIXME: concider friction force
+            # @FIXME: consider friction force
 
             d_f = new_f - self.f
             self._managed_point.add_force(d_f)

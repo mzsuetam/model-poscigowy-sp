@@ -12,7 +12,7 @@
       {
         "x": 15,
         "y": 5,
-        "h": 5
+        "h": 2
       },
       {
         "x": 15,
@@ -26,7 +26,7 @@
       },
       {
         "x": 15,
-        "y": 12,
+        "y": 13,
         "h": 1
       }
     ],
@@ -36,8 +36,7 @@
         "x": 28,
         "y": 18,
         "color": "pink",
-        "radius": 0.5,
-        "save_history": false
+        "radius": 0.5
       },
       {
         "name": "p1",
@@ -53,7 +52,7 @@
       "managed_point": "p1"
     },
     {
-      "type": "AstarController",
+      "type": "VisionController",
       "managed_point": "p1",
       "destination_point": "destination_point"
     }
