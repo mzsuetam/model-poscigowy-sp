@@ -1,4 +1,5 @@
 import networkx as nx
+import numpy as np
 import heapq
 import matplotlib.pyplot as plt
 
@@ -21,7 +22,10 @@ class VisionController(BaseGraphController):
                  angle_step: int = 4,
                  goal_score: int = 1,
                  unknown_score: int = 10,
-                 known_score: int = 1000
+                 crossroads_score: int = 10,  # for now the same as unknown_score
+                 known_score: int = 1000,
+                 edge_threshold: int = 3,
+                 priority_queue_size: int = 1000
                  ):
         super().__init__(
             canvas_dim,
@@ -39,10 +43,16 @@ class VisionController(BaseGraphController):
         self._goal_score = goal_score
         self._unknown_score = unknown_score
         self._known_score = known_score
+        self._crossroads_score = crossroads_score
+        self._edge_threshold = edge_threshold
+        self._priority_queue_size = priority_queue_size
+        self._visited_nodes = set()
+        self._previous_len = 0
         self._priority_queue = []
 
-
     def update(self, t, dt) -> None:
+        self._visited_nodes.clear()
+        self._previous_len = 0
         for angle in range(0, 360, self._angle_step):
             self.view_length(angle)
         self.lazy_update()
@@ -84,50 +94,90 @@ class VisionController(BaseGraphController):
             self._managed_point.subtract_force(self.f)
             self.f *= 0
 
-    def view_length(self, angle):
-        view_radius = 1
+    def view_length(self, angle) -> int:
+        view_length = 1
         current_position = (self._managed_point.x, self._managed_point.y)
         while True:
-            end_view_position = hlp.calc_end_line(current_position, angle, view_radius)
+            end_view_position = hlp.calc_end_line(
+                current_position, angle, view_length)
             if self.view_collision(end_view_position, angle):
-                break
-            view_radius += 1
+                if self._previous_len == 0:
+                    self._previous_len = view_length
+                if abs(self._previous_len - view_length) > self._edge_threshold:
+                    self.add_crossroads(view_length, angle)
+                    self._previous_len = view_length
+                return view_length
+            view_length += 1
 
     def view_collision(self, cord, angle) -> bool:
         cord = (int(cord[0]), int(cord[1]))
         if cord[0] < 0 or cord[0] > self._canvas_dim.x \
                 or cord[1] < 0 or cord[1] > self._canvas_dim.y:
             return True
-        distance = hlp.calc_euclidean_dist(cord, (self._managed_point.x, self._managed_point.y))
+        distance = hlp.calc_euclidean_dist(
+            cord, (self._managed_point.x, self._managed_point.y))
         # At the edge of the map
         if cord[0] == 0 or cord[0] == self._canvas_dim.x \
                 or cord[1] == 0 or cord[1] == self._canvas_dim.y:
-            heapq.heappush(self._priority_queue, VisionNode(cord, distance, self._known_score))
+            if cord not in self._visited_nodes:
+                heapq.heappush(self._priority_queue, VisionNode(
+                    cord, distance, self._known_score))
+                self._visited_nodes.add(cord)
             return True
         # collision with block
         for bl in self._blocks[4:]:
             if bl.x <= cord[0] <= bl.x + bl.w and bl.y + bl.h >= cord[1] >= bl.y:
-                heapq.heappush(self._priority_queue, VisionNode(cord, distance, self._known_score))
+                if cord not in self._visited_nodes:
+                    heapq.heappush(self._priority_queue, VisionNode(
+                        cord, distance, self._known_score))
+                    self._visited_nodes.add(cord)
                 return True
         # found destination point
         if int(cord[0]) == self._destination_point.x and int(cord[1]) == self._destination_point.y:
-            heapq.heappush(self._priority_queue, VisionNode(cord, distance, self._goal_score))
-            print("\tGOOOOOL: ", angle)
+            if cord not in self._visited_nodes:
+                heapq.heappush(self._priority_queue, VisionNode(
+                    cord, distance, self._goal_score))
+                self._visited_nodes.add(cord)
             return True
-        # heapq.heappush(self._priority_queue, VisionNode(cord, distance, self._known_score))
         return False
+
+    def add_crossroads(self, view_length, angle) -> None:
+        current_position = (self._managed_point.x, self._managed_point.y)
+        end_view_position = hlp.calc_end_line(
+            current_position, angle, view_length)
+        previous_position = hlp.calc_end_line(
+            current_position, angle - self._angle_step, self._previous_len)
+        crossroads_position = (int((end_view_position[0] + previous_position[0]) / 2),
+                               int((end_view_position[1] + previous_position[1]) / 2))
+        crossroads_length = hlp.calc_euclidean_dist(
+            crossroads_position, (self._managed_point.x, self._managed_point.y))
+        heapq.heappush(self._priority_queue, VisionNode(
+            crossroads_position, crossroads_length, self._crossroads_score))
+        self._visited_nodes.add(crossroads_position)
+        return
 
     def lazy_update(self) -> bool:
         # Instead of updating all nodes each time, the agent moves,
         # we check the value of a node when it's picked as the most desired one.
         temporary_goal = heapq.heappop(self._priority_queue)
         while True:
+            # if temporary_goal.heuristic_cost == self._unknown_score and \
+            #         temporary_goal.position in self._visited_nodes:
+            #     temporary_goal.heuristic_cost = self._known_score
             updated_position = hlp.calc_euclidean_dist(temporary_goal.position,
                                                        (self._managed_point.x, self._managed_point.y))
             temporary_goal.distance_from_node = updated_position
             heapq.heappush(self._priority_queue, temporary_goal)
-            if temporary_goal == self._priority_queue[0]:
+            if self._priority_queue[0].distance_from_node < 0.6 and \
+                    self._priority_queue[0].heuristic_cost != self._goal_score:
+                heapq.heappop(self._priority_queue)
+            elif temporary_goal == self._priority_queue[0]:
+                self._priority_queue = heapq.nsmallest(
+                    self._priority_queue_size, self._priority_queue)
+                print("goal set:", temporary_goal.position,
+                      temporary_goal.heuristic_cost, temporary_goal.distance_from_node)
                 return True
+
             temporary_goal = heapq.heappop(self._priority_queue)
 
     def _get_astar_path(self):

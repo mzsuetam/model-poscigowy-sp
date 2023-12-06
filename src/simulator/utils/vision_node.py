@@ -10,7 +10,6 @@ class VisionNode:
 
     def __eq__(self, other):
         if isinstance(other, VisionNode):
-            return (self.position == other.position) and \
-                   (self.distance_from_node == other.distance_from_node) and \
-                   (self.heuristic_cost == other.heuristic_cost)
+            return int(self.distance_from_node * self.heuristic_cost) == \
+                     int(other.distance_from_node * other.heuristic_cost)
         return False
