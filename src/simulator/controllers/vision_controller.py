@@ -47,16 +47,19 @@ class VisionController(BaseGraphController):
         self._edge_threshold = edge_threshold
         self._priority_queue_size = priority_queue_size
         self._visited_nodes = set()
+        self._seen_crossroads = set()
         self._previous_len = 0
         self._priority_queue = []
 
     def update(self, t, dt) -> None:
+        print(len(self._priority_queue))
         self._visited_nodes.clear()
         self._previous_len = 0
         for angle in range(0, 360, self._angle_step):
             self.view_length(angle)
         self.lazy_update()
         astar_path = self._get_astar_path()
+
         if len(astar_path) > 1:
             next_point = Vect2d(0, 0)
             used_points = 0
@@ -151,9 +154,11 @@ class VisionController(BaseGraphController):
                                int((end_view_position[1] + previous_position[1]) / 2))
         crossroads_length = hlp.calc_euclidean_dist(
             crossroads_position, (self._managed_point.x, self._managed_point.y))
-        heapq.heappush(self._priority_queue, VisionNode(
-            crossroads_position, crossroads_length, self._crossroads_score))
-        self._visited_nodes.add(crossroads_position)
+        if crossroads_position not in self._seen_crossroads:
+            print("crossroads:", crossroads_position, crossroads_length)
+            heapq.heappush(self._priority_queue, VisionNode(
+                crossroads_position, crossroads_length, self._crossroads_score))
+            self._seen_crossroads.add(crossroads_position)
         return
 
     def lazy_update(self) -> bool:
