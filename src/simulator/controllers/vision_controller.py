@@ -20,11 +20,11 @@ class VisionController(BaseGraphController):
                  gap_between_nodes: float = 1 / 2,
                  steps_ahead: int = 1,
                  angle_step: int = 4,
-                 goal_score: int = 1,
+                 goal_score: int = 0.01,
                  unknown_score: int = 10,
-                 crossroads_score: int = 10,  # for now the same as unknown_score
+                 crossroads_score: int = 100,
                  known_score: int = 1000,
-                 edge_threshold: int = 3,
+                 edge_threshold: int = 4,
                  priority_queue_size: int = 1000
                  ):
         super().__init__(
@@ -40,26 +40,29 @@ class VisionController(BaseGraphController):
         self._angle_step = angle_step
         self._steps_ahead = steps_ahead
         self.f = Vect2d(0, 0)
+        # SCORES
         self._goal_score = goal_score
         self._unknown_score = unknown_score
         self._known_score = known_score
         self._crossroads_score = crossroads_score
+        # VISION
         self._edge_threshold = edge_threshold
         self._priority_queue_size = priority_queue_size
         self._visited_nodes = set()
         self._seen_crossroads = set()
+        self._crossroads_threshold = 3
         self._previous_len = 0
         self._priority_queue = []
 
     def update(self, t, dt) -> None:
+        self.clean_current_location()
         print(len(self._priority_queue))
         self._visited_nodes.clear()
-        self._previous_len = 0
         for angle in range(0, 360, self._angle_step):
             self.view_length(angle)
+        print("\tNewly visited nodes :o", len(self._visited_nodes))
         self.lazy_update()
         astar_path = self._get_astar_path()
-
         if len(astar_path) > 1:
             next_point = Vect2d(0, 0)
             used_points = 0
@@ -122,44 +125,50 @@ class VisionController(BaseGraphController):
         # At the edge of the map
         if cord[0] == 0 or cord[0] == self._canvas_dim.x \
                 or cord[1] == 0 or cord[1] == self._canvas_dim.y:
-            if cord not in self._visited_nodes:
-                heapq.heappush(self._priority_queue, VisionNode(
-                    cord, distance, self._known_score))
-                self._visited_nodes.add(cord)
+            # if cord not in self._visited_nodes:
+            #     heapq.heappush(self._priority_queue, VisionNode(
+            #         cord, distance, self._known_score))
+            #     self._visited_nodes.add(cord)
             return True
         # collision with block
         for bl in self._blocks[4:]:
             if bl.x <= cord[0] <= bl.x + bl.w and bl.y + bl.h >= cord[1] >= bl.y:
-                if cord not in self._visited_nodes:
-                    heapq.heappush(self._priority_queue, VisionNode(
-                        cord, distance, self._known_score))
-                    self._visited_nodes.add(cord)
+                # if cord not in self._visited_nodes:
+                #     heapq.heappush(self._priority_queue, VisionNode(
+                #         cord, distance, self._known_score))
+                #     self._visited_nodes.add(cord)
                 return True
         # found destination point
         if int(cord[0]) == self._destination_point.x and int(cord[1]) == self._destination_point.y:
+            print("================================\n\tfound destination point"
+                  "\n================================")
             if cord not in self._visited_nodes:
                 heapq.heappush(self._priority_queue, VisionNode(
                     cord, distance, self._goal_score))
                 self._visited_nodes.add(cord)
             return True
+        self._visited_nodes.add(cord)
         return False
 
     def add_crossroads(self, view_length, angle) -> None:
         current_position = (self._managed_point.x, self._managed_point.y)
-        end_view_position = hlp.calc_end_line(
-            current_position, angle, view_length)
-        previous_position = hlp.calc_end_line(
-            current_position, angle - self._angle_step, self._previous_len)
-        crossroads_position = (int((end_view_position[0] + previous_position[0]) / 2),
-                               int((end_view_position[1] + previous_position[1]) / 2))
-        crossroads_length = hlp.calc_euclidean_dist(
-            crossroads_position, (self._managed_point.x, self._managed_point.y))
-        if crossroads_position not in self._seen_crossroads:
-            print("crossroads:", crossroads_position, crossroads_length)
-            heapq.heappush(self._priority_queue, VisionNode(
-                crossroads_position, crossroads_length, self._crossroads_score))
+        end_view_position = hlp.calc_end_line(current_position, angle, view_length)
+        previous_position = hlp.calc_end_line(current_position, angle - self._angle_step, self._previous_len)
+        crossroads_position = ((end_view_position[0] + previous_position[0]) // 2,
+                               (end_view_position[1] + previous_position[1]) // 2)
+        crossroads_length = hlp.calc_euclidean_dist(crossroads_position, current_position)
+        if crossroads_position not in self._seen_crossroads \
+                and all(hlp.calc_euclidean_dist(crossroads_position, seen_position) > self._crossroads_threshold
+                        for seen_position in self._seen_crossroads):
+            heapq.heappush(self._priority_queue,
+                           VisionNode(crossroads_position, crossroads_length, self._crossroads_score))
             self._seen_crossroads.add(crossroads_position)
-        return
+
+    def clean_current_location(self):
+        current_position = (int(self._managed_point.x), int(self._managed_point.y))
+        self._priority_queue = \
+            [node for node in self._priority_queue if hlp.calc_euclidean_dist(node.position, current_position) > 1
+                                and node.heuristic_cost != self._goal_score]
 
     def lazy_update(self) -> bool:
         # Instead of updating all nodes each time, the agent moves,
