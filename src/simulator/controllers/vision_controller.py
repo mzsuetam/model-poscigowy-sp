@@ -53,8 +53,8 @@ class VisionController(BaseGraphController):
         self._crossroads_threshold = 3
         self._previous_len = 0
         self._priority_queue = []
-
     def update(self, t, dt) -> None:
+        return
         self.clean_current_location()
         print(len(self._priority_queue))
         self._visited_nodes.clear()
