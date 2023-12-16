@@ -120,7 +120,7 @@ def main():
         print(directory)
         sim = Simulator.from_file(directory)
     else:
-        sim = Simulator.from_file('assets/labyrinth.json')
+        sim = Simulator.from_file('assets/map2.json')
 
     df_history = sim.run()
 

@@ -6,12 +6,13 @@ import matplotlib.pyplot as plt
 import src.simulator.utils.helpers as hlp
 from src.simulator.utils.vision_node import VisionNode
 from src.simulator.controllers.base_graph_controller import BaseGraphController
+from src.simulator.controllers.astar_controller import AstarController
 from src.simulator.objects.block import Block
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.utils.vect_2d import Vect2d
 
 
-class VisionController(BaseGraphController):
+class VisionController(AstarController):
     def __init__(self,
                  managed_point: PointMass,
                  destination_point: Vect2d | PointMass,
@@ -28,9 +29,12 @@ class VisionController(BaseGraphController):
                  priority_queue_size: int = 1000
                  ):
         super().__init__(
+            managed_point,
+            destination_point,
             canvas_dim,
             blocks,
-            gap_between_nodes
+            gap_between_nodes,
+            steps_ahead
         )
         self._blocks: [Block] = blocks  # [m]
         self._managed_point: PointMass = managed_point
@@ -48,7 +52,6 @@ class VisionController(BaseGraphController):
         # VISION
         self._edge_threshold = edge_threshold
         self._priority_queue_size = priority_queue_size
-        # self._unvisited_nodes =
         self._vision_nodes = set({(x, y) for x in range(self._canvas_dim.x) for y in range(self._canvas_dim.y)
                                   if (x, y) in self._graph})
         self._target_nodes = self._vision_nodes.copy()
@@ -65,42 +68,7 @@ class VisionController(BaseGraphController):
             self.view_length(angle)
         self.target_update()
         astar_path = self._get_astar_path()
-        if len(astar_path) > 1:
-            next_point = Vect2d(0, 0)
-            used_points = 0
-            for i in range(1, int(self._steps_ahead / self._gap_between_nodes) + 1):
-                idx = i + 1 if len(astar_path) > i + 1 else -1
-                next_node = astar_path[idx]
-                next_cord = self.node_to_cord(next_node)
-                next_point += Vect2d(*next_cord)
-                used_points += 1
-
-            if used_points == 0:
-                return
-
-            next_point = next_point / used_points
-
-            v = self._managed_point.get_velocity()
-            desired_v = (next_point - self._managed_point.center)
-            distance = desired_v.norm()
-            desired_v /= distance
-            desired_v *= min(5.0, distance / dt * 0.05)
-
-            desired_a = (desired_v - v) / dt * 0.1
-            a_value = min(5.0, desired_a.norm())
-            desired_a *= a_value / desired_a.norm()
-
-            new_f = desired_a * self._managed_point.m
-
-            # @FIXME: consider friction force
-
-            d_f = new_f - self.f
-            self._managed_point.add_force(d_f)
-            self.f = new_f
-
-        if len(astar_path) == 1:
-            self._managed_point.subtract_force(self.f)
-            self.f *= 0
+        self.calculate_and_apply_force(t, dt, astar_path)
 
     def view_length(self, angle) -> int:
         view_length = 1
@@ -108,11 +76,11 @@ class VisionController(BaseGraphController):
         while True:
             end_view_position = hlp.calc_end_line(
                 current_position, angle, view_length)
-            if self.view_collision(end_view_position, angle):
+            if self.view_collision(end_view_position):
                 return view_length
             view_length += 1
 
-    def view_collision(self, cord, angle) -> bool:
+    def view_collision(self, cord) -> bool:
         cord = (int(cord[0]), int(cord[1]))
         if cord[0] < 0 or cord[0] > self._canvas_dim.x \
                 or cord[1] < 0 or cord[1] > self._canvas_dim.y:
@@ -125,7 +93,7 @@ class VisionController(BaseGraphController):
                 self._target_nodes.remove(cord)
             return True
         # collision with block
-        for bl in self._blocks[4:]:
+        for bl in self._blocks:
             if bl.x <= cord[0] <= bl.x + bl.w and bl.y + bl.h >= cord[1] >= bl.y:
                 if cord in self._target_nodes:
                     self._visited_nodes.add(cord)
@@ -135,6 +103,7 @@ class VisionController(BaseGraphController):
         if int(cord[0]) == self._destination_point.x and int(cord[1]) == self._destination_point.y:
             self._visited_nodes.add(cord)
             return True
+        # empty space
         if cord in self._target_nodes:
             self._visited_nodes.add(cord)
             self._target_nodes.remove(cord)
@@ -153,7 +122,8 @@ class VisionController(BaseGraphController):
         for node in self._target_nodes:
             dist = hlp.calc_euclidean_dist(
                 node, (self._managed_point.x, self._managed_point.y))
-            if node[0] == self._destination_point.x and node[1] == self._destination_point.y and node in self._visited_nodes:
+            if node[0] == self._destination_point.x and node[
+                1] == self._destination_point.y and node in self._visited_nodes:
                 heapq.heappush(self._priority_queue, (VisionNode(node, dist, self._goal_score)))
             else:
                 heapq.heappush(self._priority_queue, (VisionNode(node, dist, self._unknown_score)))

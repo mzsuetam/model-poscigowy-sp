@@ -55,7 +55,9 @@ class AstarController(BaseGraphController):
 
     def update(self, t, dt) -> None:
         astar_path = self._get_astar_path()
+        self.calculate_and_apply_force(t, dt, astar_path)
 
+    def calculate_and_apply_force(self, t, dt, astar_path) -> None:
         if len(astar_path) > 1:
             next_point = Vect2d(0, 0)
             used_points = 0
