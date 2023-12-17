@@ -36,7 +36,8 @@
         "x": 28,
         "y": 18,
         "color": "pink",
-        "radius": 0.5
+        "radius": 0.5,
+        "save_history": false
       },
       {
         "name": "p1",

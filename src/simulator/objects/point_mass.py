@@ -16,6 +16,7 @@ class PointMass:
                  radius=0.2,
                  color=colors.RED,
                  show=True,
+                 save_history=True,
                  friction_factor=5e-2,
                  ):
         self.id: int = id
@@ -28,6 +29,7 @@ class PointMass:
         self.radius: float = radius  # [m]
         self.color: Color = color
         self.show: bool = show
+        self.save_history: bool = save_history
         self.friction_factor: float = friction_factor
 
         self._bb: pygame.Rect = pygame.Rect(0, 0, 0, 0)
@@ -90,6 +92,10 @@ class PointMass:
         if corr_x != -1 and corr_y != -1:
             pass
         return corr
+
+    def is_colliding_with(self, other) -> bool:
+        d = (self.center - other.center).norm()
+        return d <= self.radius + other.radius
 
     def _update_bb(self) -> None:
         self._bb.x = (self.x - self.radius) * px_in_m

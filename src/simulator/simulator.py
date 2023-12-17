@@ -2,8 +2,8 @@ import pygame
 import pandas as pd
 import json
 
-from simulator.controllers.astar_controller import AstarController
-from simulator.controllers.to_mouse_controller import ToMouseController
+from src.simulator.controllers.astar_controller import AstarController
+from src.simulator.controllers.to_mouse_controller import ToMouseController
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.objects.block import Block
 from src.simulator.utils.vect_2d import Vect2d
@@ -41,7 +41,7 @@ class Simulator:
 
         self._points_by_names = {}
 
-        self._mouse_point = self.add_point_mass(10, 10, show=False)  # mouse point
+        self._mouse_point = self.add_point_mass(10, 10, show=False, save_history=False)  # mouse point
 
         self.focusable_points = []
 
@@ -53,6 +53,8 @@ class Simulator:
         self.add_block(0, self._canvas.get_height() / px_in_m - 1, w=self._canvas.get_width() // px_in_m)
 
         pygame.display.set_caption("Model Pościgowy")
+
+        self._pygame_run = False
 
     def _draw_window(self, draw_vectors=False, draw_bb=False):
         # draw background
@@ -98,11 +100,11 @@ class Simulator:
         focus_point = -1
         df_history = pd.DataFrame(columns=["id", "x", "y", "v_x", "v_y", "a_x", "a_y"])
         frame = -1
-        game_run = True
+        self._pygame_run = True
         game_clock = pygame.time.Clock()
 
         print("Starting simulation...")
-        while game_run:  # infinite loop in which all events are being checked
+        while self._pygame_run:  # infinite loop in which all events are being checked
             frame += 1
             game_clock.tick(self._FPS)  # controlling speed of main_loop
             t = frame / float(self._FPS)
@@ -118,11 +120,11 @@ class Simulator:
             for event in pygame.event.get():  # testing all events in pygame
                 # WINDOW_EXIT
                 if event.type == pygame.QUIT:  # checking if event1 happened in this checking loop
-                    game_run = False  # event1 consequences
+                    self._pygame_run = False  # event1 consequences
                     break
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        game_run = False
+                        self._pygame_run = False
                         break
                 if event.type == pygame.MOUSEMOTION:
                     if pygame.mouse.get_pressed()[2]:  # 0-lmb, 1-mmb, 2-pmb
@@ -164,7 +166,7 @@ class Simulator:
             for pt in self._simulation_elements['points']:
                 pt.update_position(1 / self._FPS, self._simulation_elements['blocks'])
 
-                if pt.show:
+                if pt.save_history:
                     stats = pt.__dict__()
                     df_history = pd.concat([df_history, pd.DataFrame(stats, index=[t])])
 
@@ -177,6 +179,9 @@ class Simulator:
         pygame.quit()
 
         return df_history
+
+    def stop(self):
+        self._pygame_run = False
 
     def add_block(self, x, y, w=1, h=1, color=colors.DARKGRAY):
         # @TODO: add check if block
@@ -196,6 +201,7 @@ class Simulator:
             radius=0.2,
             color=colors.RED,
             show=True,
+            save_history=True,
             friction_factor=5e-2,
             enable_focus=False,
             name=None
@@ -213,6 +219,7 @@ class Simulator:
             radius=radius,
             color=color,
             show=show,
+            save_history=save_history,
             friction_factor=friction_factor
         )
         if name is not None:
@@ -239,8 +246,10 @@ class Simulator:
     def get_point_mass_by_name(self, name):
         return self._points_by_names.get(name)
 
-    def get_blocks(self):
-        return self._simulation_elements['blocks']
+    def get_blocks(self, include_borders=False):
+        if include_borders:
+            return self._simulation_elements['blocks']
+        return self._simulation_elements['blocks'][4:]
 
     def add_controller(self, controller):
         self._controllers.append(controller)
@@ -251,6 +260,9 @@ class Simulator:
 
     def _log_header(self, msg):
         self._log(msg, indent=0)
+
+    def get_id_to_name(self):
+        return {pt.id: name for name, pt in self._points_by_names.items()}
 
     @staticmethod
     def from_file(path):
@@ -298,6 +310,7 @@ class Simulator:
                 point["radius"] if "radius" in point else 0.2,
                 point["color"] if "color" in point else colors.RED,
                 point["show"] if "show" in point else True,
+                point["save_history"] if "save_history" in point else True,
                 point["friction_factor"] if "friction_factor" in point else 5e-2,
                 point["enable_focus"] if "enable_focus" in point else False,
                 point["name"] if "name" in point else None
