@@ -3,6 +3,7 @@ import pandas as pd
 import json
 
 from simulator.controllers.collision_controller import CollisionController
+from src.simulator.controllers.forecasting_controller import ForecastingController
 from src.simulator.controllers.vision_controller import VisionController
 from src.simulator.controllers.astar_controller import AstarController
 from src.simulator.controllers.to_mouse_controller import ToMouseController
@@ -379,7 +380,8 @@ class Simulator:
                 managed_point = sim.get_point_mass_by_name(controller["managed_point"])
                 sim.add_to_mouse_controller(managed_point)
             elif controller["type"] == AstarController.get_type() or \
-                    controller["type"] == VisionController.get_type():
+                    controller["type"] == VisionController.get_type() or \
+                    controller["type"] == ForecastingController.get_type():
                 managed_point = sim.get_point_mass_by_name(controller["managed_point"])
                 # destination point object or string
                 if isinstance(controller["destination_point"], str):
@@ -401,6 +403,16 @@ class Simulator:
                 elif controller["type"] == VisionController.get_type():
                     sim.add_controller(
                         VisionController(
+                            managed_point,
+                            destination_point,
+                            sim.get_canvas_dim(),
+                            sim.get_blocks(),
+                            gap_between_nodes=gap_between_nodes
+                        )
+                    )
+                elif controller["type"] == ForecastingController.get_type():
+                    sim.add_controller(
+                        ForecastingController(
                             managed_point,
                             destination_point,
                             sim.get_canvas_dim(),

@@ -184,7 +184,7 @@
       "destination_point": "p0_dest"
     },
     {
-      "type": "AstarController",
+      "type": "ForecastingController",
       "managed_point": "p1",
       "destination_point": "p0"
     },
