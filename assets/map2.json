@@ -52,29 +52,38 @@
     ],
     "points": [
       {
-        "name": "destination_point",
-        "x": 28,
+        "name": "p0_dest",
+        "x": 2,
         "y": 18,
         "color": "pink",
         "radius": 0.5
       },
       {
+        "name": "p0",
+        "x": 2,
+        "y": 2,
+        "color": "red",
+        "enable_focus": true
+      },
+      {
         "name": "p1",
-        "x": 10,
-        "y": 10,
+        "x": 9,
+        "y": 9,
+        "color": "blue",
         "enable_focus": true
       }
     ]
   },
   "controllers": [
     {
-      "type": "ToMouseController",
-      "managed_point": "p1"
+      "type": "AstarController",
+      "managed_point": "p0",
+      "destination_point": "p0_dest"
     },
     {
-      "type": "VisionController",
+      "type": "ForecastingController",
       "managed_point": "p1",
-      "destination_point": "destination_point"
+      "destination_point": "p0"
     }
   ]
 }
