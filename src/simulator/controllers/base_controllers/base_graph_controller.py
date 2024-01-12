@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import networkx as nx
 
-from src.simulator.controllers.base_controller import BaseController
+from simulator.controllers.base_controllers.base_controller import BaseController
 from src.simulator.utils.vect_2d import Vect2d
 from src.simulator.objects.block import Block
 
@@ -53,6 +53,12 @@ class BaseGraphController(BaseController):
                 graph.remove_node(node)
 
         return graph
+
+    def apply(self, t: float, dt: float) -> None:
+        raise NotImplementedError()
+
+    def update(self, t: float, dt: float) -> Vect2d:
+        raise NotImplementedError()
 
     def plot_graph(
             self,

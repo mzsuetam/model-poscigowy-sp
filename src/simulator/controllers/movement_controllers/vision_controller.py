@@ -1,12 +1,9 @@
 import networkx as nx
-import numpy as np
 import heapq
-import matplotlib.pyplot as plt
 
 import src.simulator.utils.helpers as hlp
 from src.simulator.utils.vision_node import VisionNode
-from src.simulator.controllers.base_graph_controller import BaseGraphController
-from src.simulator.controllers.astar_controller import AstarController
+from simulator.controllers.movement_controllers.astar_controller import AstarController
 from src.simulator.objects.block import Block
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.utils.vect_2d import Vect2d
@@ -61,16 +58,21 @@ class VisionController(AstarController):
         self._previous_len = 0
         self._priority_queue = []
 
-    def update(self, t, dt) -> None:
-        self._priority_queue = []
-        self.clear_target_nodes()
-        for angle in range(0, 360, self._angle_step):
-            self.view_length(angle)
-        self.target_update()
-        astar_path = self._get_astar_path()
-        self.calculate_and_apply_force(t, dt, astar_path)
+    def apply(self, t, dt) -> None:
+        d_f = self.update(t, dt)
+        self._managed_point.add_force(d_f)
 
-    def view_length(self, angle) -> int:
+    def update(self, t, dt) -> Vect2d:
+        self._priority_queue = []
+        self._clear_target_nodes()
+        for angle in range(0, 360, self._angle_step):
+            self._view_length(angle)
+        self._target_update()
+        # @TODO: sprawdzić, czy to działa
+        return super().update(t, dt)
+
+
+    def _view_length(self, angle) -> int:
         view_length = 1
         current_position = (self._managed_point.x, self._managed_point.y)
         while True:
@@ -109,7 +111,7 @@ class VisionController(AstarController):
             self._target_nodes.remove(cord)
         return False
 
-    def clear_target_nodes(self):
+    def _clear_target_nodes(self):
         if self._target_nodes:
             target_node = (self._destination_point.x, self._destination_point.y)
             if target_node not in self._visited_nodes:
@@ -118,7 +120,7 @@ class VisionController(AstarController):
             if target_node:
                 self._target_nodes.append(target_node)
 
-    def target_update(self):
+    def _target_update(self):
         for node in self._target_nodes:
             dist = hlp.calc_euclidean_dist(
                 node, (self._managed_point.x, self._managed_point.y))

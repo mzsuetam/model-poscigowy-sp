@@ -2,11 +2,11 @@ import pygame
 import pandas as pd
 import json
 
-from simulator.controllers.collision_controller import CollisionController
-from src.simulator.controllers.forecasting_controller import ForecastingController
-from src.simulator.controllers.vision_controller import VisionController
-from src.simulator.controllers.astar_controller import AstarController
-from src.simulator.controllers.to_mouse_controller import ToMouseController
+from simulator.controllers.events_controllers.collision_controller import CollisionController
+from simulator.controllers.movement_controllers.forecasting_controller import ForecastingController
+from simulator.controllers.movement_controllers.vision_controller import VisionController
+from simulator.controllers.movement_controllers.astar_controller import AstarController
+from simulator.controllers.movement_controllers.to_mouse_controller import ToMouseController
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.objects.block import Block
 from src.simulator.utils.vect_2d import Vect2d
@@ -198,7 +198,7 @@ class Simulator:
 
             # CONTROLLERS_UPDATE
             for c in self._controllers:
-                c.update(t, 1 / self._FPS)
+                c.apply(t, 1 / self._FPS)
 
             # POINTS_UPDATE
             for pt in self._simulation_elements['points']:

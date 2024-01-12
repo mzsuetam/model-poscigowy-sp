@@ -1,6 +1,4 @@
-import networkx as nx
-
-from src.simulator.controllers.base_graph_controller import BaseGraphController
+from simulator.controllers.base_controllers.base_graph_controller import BaseGraphController
 from src.simulator.objects.block import Block
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.utils.vect_2d import Vect2d
@@ -29,7 +27,10 @@ class TremauxController(BaseGraphController):
             find_closest_for_nonexistent=True
         )]
 
-    def update(self, t: float, dt: float) -> None:
+    def apply(self, t: float, dt: float) -> None:
+        self.update(t, dt)
+
+    def update(self, t: float, dt: float) -> Vect2d:
         current_node = self._stack[-1]
         neighbors = list(self._graph.neighbors(current_node))
 
@@ -43,7 +44,8 @@ class TremauxController(BaseGraphController):
         else:
             # Backtrack
             self._stack.pop()
-        pass
+
+        return Vect2d(0, 0)
 
     @staticmethod
     def get_type():

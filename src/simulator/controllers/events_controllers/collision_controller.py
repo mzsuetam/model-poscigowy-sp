@@ -1,4 +1,5 @@
-from src.simulator.controllers.base_controller import BaseController
+from simulator.utils.vect_2d import Vect2d
+from simulator.controllers.base_controllers.base_controller import BaseController
 from src.simulator.objects.point_mass import PointMass
 
 
@@ -16,10 +17,14 @@ class CollisionController(BaseController):
         self._iter = 0
         self._iter_max = 60
 
-    def update(self, t: float, dt: float) -> None:
+    def apply(self, t: float, dt: float) -> None:
+        self.update(t, dt)
+
+    def update(self, t: float, dt: float) -> Vect2d:
         self._iter = (self._iter + 1) % self._iter_max
         if self._iter and self._point_1.is_colliding_with(self._point_2):
             self._function_to_call()
+        return Vect2d(0, 0)
 
     @staticmethod
     def get_type():

@@ -1,4 +1,4 @@
-from src.simulator.controllers.astar_controller import AstarController
+from simulator.controllers.movement_controllers.astar_controller import AstarController
 from src.simulator.objects.block import Block
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.utils.vect_2d import Vect2d
@@ -16,7 +16,11 @@ class ForecastingController(AstarController):
         super().__init__(managed_point, target, canvas_dim, blocks, gap_between_nodes, steps_ahead)
         self._target = target
 
-    def update(self, t: float, dt: float) -> None:
+    def apply(self, t: float, dt: float) -> None:
+        d_f = self.update(t, dt)
+        self._managed_point.add_force(d_f)
+
+    def update(self, t: float, dt: float) -> Vect2d:
         self._destination_point = self._predict()
 
         astar_path = self._get_astar_path()
@@ -32,7 +36,7 @@ class ForecastingController(AstarController):
                 used_points += 1
 
             if used_points == 0:
-                return
+                return Vect2d(0, 0)
 
             next_point = next_point / used_points
 
@@ -51,12 +55,13 @@ class ForecastingController(AstarController):
             # @FIXME: consider friction force
 
             d_f = new_f - self.f
-            self._managed_point.add_force(d_f)
             self.f = new_f
+            return d_f
 
         if len(astar_path) == 1:
-            self._managed_point.subtract_force(self.f)
+            f = -1 * self.f
             self.f *= 0
+            return f
 
     def _predict(self) -> Vect2d:
         c = self._target.center

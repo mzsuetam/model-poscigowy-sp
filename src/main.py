@@ -3,12 +3,8 @@ from matplotlib.patches import Rectangle
 import sys
 import os
 
-from simulator.controllers.astar_controller import AstarController
-from simulator.controllers.collision_controller import CollisionController
 from simulator.simulator import Simulator
 
-from simulator.controllers.to_mouse_controller import ToMouseController
-from simulator.utils.vect_2d import Vect2d
 
 def plot_history(df_history, id_to_name=None):
     df_history = df_history.groupby("id")
@@ -120,7 +116,7 @@ def main():
         print(directory)
         sim = Simulator.from_file(directory)
     else:
-        sim = Simulator.from_file('assets/map2.json')
+        sim = Simulator.from_file('assets/labyrinth.json')
 
     df_history = sim.run()
 

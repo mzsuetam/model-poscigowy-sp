@@ -1,7 +1,7 @@
 import heapq
 import networkx as nx
 
-from src.simulator.controllers.astar_controller import AstarController
+from simulator.controllers.movement_controllers.astar_controller import AstarController
 from src.simulator.objects.block import Block
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.utils.vect_2d import Vect2d
@@ -27,6 +27,12 @@ class AstarMazeController(AstarController):
             tuple(self._managed_point.center),
             find_closest_for_nonexistent=True
         )
+
+    def apply(self, t, dt) -> None:
+        self.update(t, dt)
+
+    def update(self, t, dt) -> Vect2d:
+        return super().update(t, dt)
 
     def _get_astar_path(self):
         self._update_priority_queue()
@@ -56,17 +62,17 @@ class AstarMazeController(AstarController):
         if self._priority_queue:
             current_cost, current_node, path = heapq.heappop(self._priority_queue)
 
-            if self.is_goal(current_node):
+            if self._is_goal(current_node):
                 return path + [current_node]
 
             for neighbor in self._graph.neighbors(current_node):
-                total_cost = current_cost + 1 + self.heuristic(neighbor)
+                total_cost = current_cost + 1 + self._heuristic(neighbor)
                 heapq.heappush(self._priority_queue, (total_cost, neighbor, path + [current_node]))
 
-    def is_goal(self, current_node) -> bool:
+    def _is_goal(self, current_node) -> bool:
         return current_node == self._destination_point
 
-    def heuristic(self, node):
+    def _heuristic(self, node):
         return 1
 
     @staticmethod

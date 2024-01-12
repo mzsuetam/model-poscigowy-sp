@@ -1,7 +1,8 @@
 
 import networkx as nx
+from matplotlib import pyplot as plt
 
-from src.simulator.controllers.base_graph_controller import BaseGraphController
+from simulator.controllers.base_controllers.base_graph_controller import BaseGraphController
 from src.simulator.objects.block import Block
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.utils.vect_2d import Vect2d
@@ -30,34 +31,13 @@ class AstarController(BaseGraphController):
 
         self.f = Vect2d(0, 0)
 
-        # astar_path = nx.astar_path(
-        #     self._graph,
-        #     self.cord_to_node(tuple(self._managed_point.center)),
-        #     self.cord_to_node(tuple(self._destination_point))
-        # )
+    def apply(self, t, dt) -> None:
+        d_f = self.update(t, dt)
+        self._managed_point.add_force(d_f)
 
-        # fig, ax = plt.subplots()
-        # self.plot_graph(
-        #     ax,
-        #     plot_nodes=False,
-        #     plot_edges=False,
-        # )
-        # astar_x, astar_y = zip(*[self.node_to_cord(c) for c in astar_path])
-        # ax.plot(
-        #     astar_x,
-        #     astar_y,
-        #     c="red",
-        #     linewidth=5,
-        #     zorder=2
-        # )
-        # fig.gca().invert_yaxis()
-        # fig.show()
-
-    def update(self, t, dt) -> None:
+    def update(self, t, dt) -> Vect2d:
         astar_path = self._get_astar_path()
-        self.calculate_and_apply_force(t, dt, astar_path)
 
-    def calculate_and_apply_force(self, t, dt, astar_path) -> None:
         if len(astar_path) > 1:
             next_point = Vect2d(0, 0)
             used_points = 0
@@ -69,7 +49,7 @@ class AstarController(BaseGraphController):
                 used_points += 1
 
             if used_points == 0:
-                return
+                return Vect2d(0, 0)
 
             next_point = next_point / used_points
 
@@ -88,12 +68,13 @@ class AstarController(BaseGraphController):
             # @FIXME: consider friction force
 
             d_f = new_f - self.f
-            self._managed_point.add_force(d_f)
             self.f = new_f
+            return d_f
 
         if len(astar_path) == 1:
-            self._managed_point.subtract_force(self.f)
+            f = -1*self.f
             self.f *= 0
+            return f
 
     def _get_astar_path(self):
         dest = None
@@ -116,6 +97,26 @@ class AstarController(BaseGraphController):
             )
         )
         return astar_path
+
+    def plot_path(self):
+        astar_path = self._get_astar_path()
+
+        fig, ax = plt.subplots()
+        self.plot_graph(
+            ax,
+            plot_nodes=False,
+            plot_edges=False,
+        )
+        astar_x, astar_y = zip(*[self.node_to_cord(c) for c in astar_path])
+        ax.plot(
+            astar_x,
+            astar_y,
+            c="red",
+            linewidth=5,
+            zorder=2
+        )
+        fig.gca().invert_yaxis()
+        fig.show()
 
     @staticmethod
     def get_type():

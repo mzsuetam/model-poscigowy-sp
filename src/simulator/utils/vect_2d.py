@@ -27,6 +27,9 @@ class Vect2d:
             return Vect2d(self.x * other.x, self.y * other.y)
         raise RuntimeError()
 
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
     def __truediv__(self, other):
         if type(other) is int or type(other) is float:
             if other == 0:
