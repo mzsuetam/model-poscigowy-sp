@@ -184,7 +184,7 @@
       "destination_point": "p0_dest"
     },
     {
-      "type": "ForecastingController",
+      "type": "PursuingController",
       "managed_point": "p1",
       "destination_point": "p0"
     },

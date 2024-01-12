@@ -118,19 +118,21 @@ def main():
     else:
         sim = Simulator.from_file('assets/labyrinth.json')
 
-    df_history = sim.run()
+    df_history = sim.run(
+        verbose=True,
+    )
 
     # df_history.to_csv("history.csv", index=False)
-    # plot_history(
-    #     df_history,
-    #     sim.get_id_to_name(),
-    # )
-    # plot_paths(
-    #     df_history,
-    #     sim.get_id_to_name(),
-    #     sim.get_canvas_dim(),
-    #     sim.get_blocks(),
-    # )
+    plot_history(
+        df_history,
+        sim.get_id_to_name(),
+    )
+    plot_paths(
+        df_history,
+        sim.get_id_to_name(),
+        sim.get_canvas_dim(),
+        sim.get_blocks(),
+    )
 
 
 if __name__ == "__main__":

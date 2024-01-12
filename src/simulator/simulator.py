@@ -7,6 +7,7 @@ from simulator.controllers.movement_controllers.forecasting_controller import Fo
 from simulator.controllers.movement_controllers.vision_controller import VisionController
 from simulator.controllers.movement_controllers.astar_controller import AstarController
 from simulator.controllers.movement_controllers.to_mouse_controller import ToMouseController
+from simulator.controllers.pursuing_controller import PursuingController
 from src.simulator.objects.point_mass import PointMass
 from src.simulator.objects.block import Block
 from src.simulator.utils.vect_2d import Vect2d
@@ -21,7 +22,8 @@ class Simulator:
                  window_w=1920,  # [px]
                  window_h=1080,  # [px]
                  canvas_w=None,  # [m]
-                 canvas_h=None,  # [m]
+                 canvas_h=None,  #
+                 verbose=False
                  ):
         self._FPS = 60
 
@@ -38,7 +40,7 @@ class Simulator:
             y=self._root.get_height() // 2 - canvas_h * px_in_m // 2,
         )
 
-        self._is_log = True
+        self.verbose = True
 
         self._simulation_elements = {
             "points": [],
@@ -134,8 +136,8 @@ class Simulator:
         if keys[pygame.K_x]:
             self._view_box.zoom -= d_scale
         if keys[pygame.K_c]:
-            self._view_box.x = self._root.get_width() // 2 - self._canvas.get_width() // 2
-            self._view_box.y = self._root.get_height() // 2 - self._canvas.get_height() // 2
+            self._view_box.x = self._root.get_width() // 2 - self._view_box.get_width() // 2
+            self._view_box.y = self._root.get_height() // 2 - self._view_box.get_height() // 2
             self._view_box.zoom = 1
             self.focus_point = -1
 
@@ -161,8 +163,8 @@ class Simulator:
 
         return True
 
-    def run(self, log=False):
-        self._is_log = log
+    def run(self, verbose=False):
+        self.verbose = verbose
         print("Initializing simulation...")
 
         df_history = pd.DataFrame(columns=["id", "x", "y", "v_x", "v_y", "a_x", "a_y"])
@@ -176,9 +178,9 @@ class Simulator:
             game_clock.tick(self._FPS)  # controlling speed of main_loop
             t = frame / float(self._FPS)
             if t % 1 == 0:
-                if self._is_log:
+                if self.verbose:
                     self._log_header(f"t = {t} [s]")
-                    self._log(self._view_box)
+                    # self._log(self._view_box)
                     for pt in self._simulation_elements['points']:
                         if pt.show:
                             self._log(pt)
@@ -312,7 +314,7 @@ class Simulator:
         )
 
     def _log(self, msg, indent=1):
-        if self._is_log:
+        if self.verbose:
             print("\t" * indent, msg, sep="")
 
     def _log_header(self, msg):
@@ -376,12 +378,14 @@ class Simulator:
 
         controllers = config["controllers"]
         for controller in controllers:
+            controllers_len_before = len(sim._controllers)
             if controller["type"] == ToMouseController.get_type():
                 managed_point = sim.get_point_mass_by_name(controller["managed_point"])
                 sim.add_to_mouse_controller(managed_point)
             elif controller["type"] == AstarController.get_type() or \
                     controller["type"] == VisionController.get_type() or \
-                    controller["type"] == ForecastingController.get_type():
+                    controller["type"] == ForecastingController.get_type() or \
+                    controller["type"] == PursuingController.get_type():
                 managed_point = sim.get_point_mass_by_name(controller["managed_point"])
                 # destination point object or string
                 if isinstance(controller["destination_point"], str):
@@ -420,6 +424,16 @@ class Simulator:
                             gap_between_nodes=gap_between_nodes
                         )
                     )
+                elif controller["type"] == PursuingController.get_type():
+                    sim.add_controller(
+                        PursuingController(
+                            managed_point,
+                            destination_point,
+                            sim.get_canvas_dim(),
+                            sim.get_blocks(),
+                            gap_between_nodes=gap_between_nodes
+                        )
+                    )
             elif controller["type"] == CollisionController.get_type():
                 point_a = sim.get_point_mass_by_name(controller["managed_point_A"])
                 point_b = sim.get_point_mass_by_name(controller["managed_point_B"])
@@ -428,9 +442,12 @@ class Simulator:
                 if point_b is None:
                     raise ValueError(f"Point {controller['managed_point_B']} does not exist")
 
-                action = None
                 if controller["action"] == "stop_simulation":
                     action = sim.stop
+                elif controller["action"] == "log":
+                    def action_print():
+                        print(f"Collision between {point_a} and {point_b} detected")
+                    action = action_print
                 else:
                     raise ValueError(f"Action {controller['action']} not supported. Declare controller in the script to use it.")
 
@@ -442,6 +459,7 @@ class Simulator:
                     )
                 )
 
+            if len(sim._controllers) == controllers_len_before:
+                raise ValueError(f"Controller {controller['type']} not supported")
             print(f"Added controller: {controller['type']}")
-
         return sim

@@ -8,12 +8,12 @@ class CollisionController(BaseController):
             self,
             point_1: PointMass,
             point_2: PointMass,
-            funtion_to_call: callable,
+            function_to_call: callable,
     ):
         super().__init__()
         self._point_1: PointMass = point_1
         self._point_2: PointMass = point_2
-        self._function_to_call: callable = funtion_to_call
+        self._function_to_call: callable = function_to_call
         self._iter = 0
         self._iter_max = 60
 

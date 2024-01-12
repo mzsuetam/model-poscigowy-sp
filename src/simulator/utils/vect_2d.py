@@ -106,6 +106,13 @@ class Vect2d:
             return Vect2d(val, val)
         raise RuntimeError()
 
+    @staticmethod
+    def from_tuple(tup):
+        if type(tup) is tuple:
+            if len(tup) == 2:
+                return Vect2d(tup[0], tup[1])
+        raise RuntimeError()
+
     def __iter__(self):
         yield self.x
         yield self.y

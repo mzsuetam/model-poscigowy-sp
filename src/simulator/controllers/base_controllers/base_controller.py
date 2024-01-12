@@ -14,7 +14,13 @@ class BaseController:
                 d = d / d.norm() * max_value
         return d
 
+    # @TODO: add subgraph getter with support for wycinanie obszarów
+
     def apply(self, t: float, dt: float) -> None:
         raise NotImplementedError()
     def update(self, t: float, dt: float) -> Vect2d:
+        raise NotImplementedError()
+
+    @staticmethod
+    def get_type():
         raise NotImplementedError()

@@ -86,7 +86,7 @@ class AstarController(BaseGraphController):
             raise Exception("Invalid destination point type")
 
         astar_path = nx.astar_path(
-            self._graph,
+            self._graph, # @FIXME: consider subgraph form base graph controller
             self.cord_to_node(
                 tuple(self._managed_point.center),
                 find_closest_for_nonexistent=True
