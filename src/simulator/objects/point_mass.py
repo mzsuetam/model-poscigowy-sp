@@ -94,6 +94,8 @@ class PointMass:
         return corr
 
     def is_colliding_with(self, other) -> bool:
+        if type(other) is not PointMass:
+            raise NotImplementedError()
         d = (self.center - other.center).norm()
         return d <= self.radius + other.radius
 

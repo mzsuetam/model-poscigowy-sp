@@ -1,9 +1,14 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+import sys
+import os
 
+from simulator.controllers.astar_controller import AstarController
 from simulator.controllers.collision_controller import CollisionController
-from src.simulator.simulator import Simulator
+from simulator.simulator import Simulator
 
+from simulator.controllers.to_mouse_controller import ToMouseController
+from simulator.utils.vect_2d import Vect2d
 
 def plot_history(df_history, id_to_name=None):
     df_history = df_history.groupby("id")
@@ -71,14 +76,6 @@ def plot_paths(df_history, id_to_name=None, canvas_dim=None, blocks=None):
               fontsize=16
     )
 
-    for group in df_history.groups:
-        df_history.get_group(group).plot(
-            ax=ax,
-            x="x",
-            y="y",
-            label=id_to_name[group],
-            legend=True
-        )
     for block in blocks:
         ax.add_patch(Rectangle(
             (block.x, block.y),
@@ -90,12 +87,25 @@ def plot_paths(df_history, id_to_name=None, canvas_dim=None, blocks=None):
             # lw=5
         ))
 
+    for group in df_history.groups:
+        ax.scatter(
+            df_history.get_group(group)["x"][0],
+            df_history.get_group(group)["y"][0],
+            # label=id_to_name[group] + " start",
+        )
+        ax.plot(
+            df_history.get_group(group)["x"],
+            df_history.get_group(group)["y"],
+            label=id_to_name[group],
+        )
+
     fig.gca().invert_yaxis()
     if canvas_dim:
-        ax.set_xlim(0, canvas_dim.x)
-        ax.set_ylim(canvas_dim.y, 0)
+        ax.set_xbound(lower=0, upper=canvas_dim.x)
+        ax.set_ybound(lower=0, upper=canvas_dim.y)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
+    ax.legend()
     ax.grid()
     fig.show()
 
@@ -105,51 +115,26 @@ def main():
     #     # canvas_w=30,
     #     # canvas_h=30
     # )
+    if sys.platform.startswith('win'):
+        directory = os.path.join(os.path.dirname(os.getcwd()), 'assets', 'map2.json')
+        print(directory)
+        sim = Simulator.from_file(directory)
+    else:
+        sim = Simulator.from_file('assets/labyrinth.json')
 
-    sim = Simulator.from_file('assets/map1.json')
-
-    # p1 = sim.get_point_mass_by_name("p1")
-
-    # blocks = sim.get_blocks()
-    #
-    # mc = ToMouseController(p1, sim.get_mouse_point(), blocks, sim.get_mouse())
-    # sim.add_controller(mc)
-    #
-    # ac = AstarController(
-    #     p1,
-    #     Vect2d(25, 25),
-    #     sim.get_canvas_dim(),
-    #     blocks,
-    #     gap_between_nodes=1/2
-    # )
-    # sim.add_controller(ac)
-
-    # @TODO:
-    # - pola widzenia
-    # http://ai.berkeley.edu/project_overview.html for guard
-    # - Dijkstra fields for thief (?)
-    # - Project 4: Ghostbusters
-
-    end_sim_coll_cont = CollisionController(
-        sim.get_point_mass_by_name("p1"),
-        sim.get_point_mass_by_name("destination_point"),
-        sim.stop
-    )
-    sim.add_controller(end_sim_coll_cont)
-
-    df_history = sim.start()
+    df_history = sim.run()
 
     # df_history.to_csv("history.csv", index=False)
-    plot_history(
-        df_history,
-        sim.get_id_to_name(),
-    )
-    plot_paths(
-        df_history,
-        sim.get_id_to_name(),
-        sim.get_canvas_dim(),
-        sim.get_blocks(),
-    )
+    # plot_history(
+    #     df_history,
+    #     sim.get_id_to_name(),
+    # )
+    # plot_paths(
+    #     df_history,
+    #     sim.get_id_to_name(),
+    #     sim.get_canvas_dim(),
+    #     sim.get_blocks(),
+    # )
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ class AstarController(BaseGraphController):
             canvas_dim: Vect2d,
             blocks: [Block],
             gap_between_nodes: float = 1 / 2,
-            steps_ahead: int = 1
+            steps_ahead: int = 1,
     ):
         super().__init__(
             canvas_dim,
@@ -54,7 +54,6 @@ class AstarController(BaseGraphController):
         # fig.show()
 
     def update(self, t, dt) -> None:
-        print("AstarController update")
         astar_path = self._get_astar_path()
 
         if len(astar_path) > 1:

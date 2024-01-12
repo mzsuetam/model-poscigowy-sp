@@ -1,0 +1,198 @@
+{
+  "window": {
+    "w_px": 1920,
+    "h_px": 1080
+  },
+  "canvas": {
+    "w": 30,
+    "h": 20
+  },
+  "objects": {
+    "blocks": [
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 7
+      },
+      {
+        "x": 3,
+        "y": 12
+      },
+      {
+        "x": 3,
+        "y": 17
+      },
+      {
+        "x": 7,
+        "y": 0,
+        "h": 8
+      },
+      {
+        "x": 7,
+        "y": 12,
+        "h": 8
+      },
+      {
+        "x": 8,
+        "y": 3
+      },
+      {
+        "x": 8,
+        "y": 16
+      },
+      {
+        "x": 11,
+        "y": 0,
+        "h": 3
+      },
+      {
+        "x": 10,
+        "y": 3,
+        "w": 3
+      },
+      {
+        "x": 15,
+        "y": 0,
+        "h": 3
+      },
+      {
+        "x": 14,
+        "y": 3,
+        "w": 3
+      },
+      {
+        "x": 19,
+        "y": 0,
+        "h": 3
+      },
+      {
+        "x": 18,
+        "y": 3,
+        "w": 2
+      },
+      {
+        "x": 10,
+        "y": 16,
+        "w": 3
+      },
+      {
+        "x": 11,
+        "y": 17,
+        "h": 3
+      },
+      {
+        "x": 14,
+        "y": 16,
+        "w": 3
+      },
+      {
+        "x": 15,
+        "y": 17,
+        "h": 3
+      },
+      {
+        "x": 18,
+        "y": 16,
+        "w": 2
+      },
+      {
+        "x": 19,
+        "y": 17,
+        "h": 3
+      },
+      {
+        "x": 13,
+        "y": 7,
+        "h": 2
+      },
+      {
+        "x": 14,
+        "y": 7,
+        "w": 9
+      },
+      {
+        "x": 13,
+        "y": 11,
+        "h": 2
+      },
+      {
+        "x": 14,
+        "y": 12,
+        "w": 9
+      },
+      {
+        "x": 23,
+        "y": 3,
+        "h": 14
+      },
+      {
+        "x": 24,
+        "y": 3,
+        "w": 3
+      },
+      {
+        "x": 24,
+        "y": 16,
+        "w": 3
+      },
+      {
+        "x": 27,
+        "y": 7,
+        "w": 3
+      },
+      {
+        "x": 27,
+        "y": 12,
+        "w": 3
+      }
+    ],
+    "points": [
+      {
+        "name": "p0_dest",
+        "x": 28,
+        "y": 10,
+        "color": "pink",
+        "radius": 0.5
+      },
+      {
+        "name": "p0",
+        "x": 2,
+        "y": 2,
+        "color": "red",
+        "enable_focus": true
+      },
+      {
+        "name": "p1",
+        "x": 10,
+        "y": 10,
+        "color": "blue",
+        "enable_focus": true
+      }
+    ]
+  },
+  "controllers": [
+    {
+      "type": "ToMouseController",
+      "managed_point": "p0"
+    },
+    {
+      "type": "AstarController",
+      "managed_point": "p0",
+      "destination_point": "p0_dest"
+    },
+    {
+      "type": "AstarController",
+      "managed_point": "p1",
+      "destination_point": "p0"
+    },
+    {
+      "type": "CollisionController",
+      "managed_point_A": "p1",
+      "managed_point_B": "p0",
+      "action": "stop_simulation"
+    }
+  ]
+}
