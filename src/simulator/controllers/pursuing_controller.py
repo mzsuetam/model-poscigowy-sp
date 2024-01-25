@@ -1,3 +1,5 @@
+import time
+
 from simulator.controllers.base_controllers.base_controller import BaseController
 from simulator.controllers.movement_controllers.astar_controller import AstarController
 from simulator.controllers.movement_controllers.forecasting_controller import ForecastingController
@@ -75,8 +77,6 @@ class PursuingController(BaseController):
         if not self._probabilistic:
             next_center = self._calculate_next_center_inertia(t, dt)
         else:
-
-            # @FIXME: following code is absolutely not optimized
 
             ic = self._calculate_next_center_inertia(t, dt).__tuple__()
 
@@ -159,15 +159,17 @@ class PursuingController(BaseController):
             from_y: from_y + 2 * r + 1
         ] = gf
 
-        for i in range(mx_padded.shape[0]):
-            for j in range(mx_padded.shape[1]):
-                if mx_padded[i, j] != 0:
-                    nodes = [
-                        n for n in self._astar_controller._graph.nodes
-                      if n[0] == i and n[1] == j
-                    ]
-                    if len(nodes) == 1:
-                        mx_padded[i, j] = 0
+        # @FIXME: this part of the code is taking 10 times longer than the rest
+        indexes = np.where(mx_padded.flatten() > 0)
+        if len(indexes) == 0:
+            return mx_padded
+        for i in range(len(indexes[0])):
+            x = i % mx_padded.shape[0]
+            y = i // mx_padded.shape[0]
+            if mx_padded[x, y] != 0:
+                calculated_node = self._astar_controller.cord_to_node((x, y))
+                if calculated_node in self._astar_controller._graph.nodes:
+                    mx_padded[x, y] = 0
 
         if r != 0:
             mx_padded = mx_padded[r:-r, r:-r]
