@@ -188,7 +188,7 @@
       "type": "PursuingController",
       "managed_point": "p1",
       "destination_point": "p0",
-      "probabilistic": true
+      "probabilistic": false
     },
     {
       "type": "CollisionController",
