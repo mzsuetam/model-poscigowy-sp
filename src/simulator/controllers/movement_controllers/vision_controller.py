@@ -1,6 +1,8 @@
 import networkx as nx
 import heapq
 
+import numpy as np
+
 import src.simulator.utils.helpers as hlp
 from src.simulator.utils.vision_node import VisionNode
 from simulator.controllers.movement_controllers.astar_controller import AstarController

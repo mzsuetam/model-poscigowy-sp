@@ -85,7 +85,10 @@ class EscapingController(BaseController):
             d_runaway = Vect2d.from_singleton(0)
             f_runaway = Vect2d.from_singleton(0)
 
-        w_runaway = d_runaway.norm() / d_critical if d_runaway != 0 else 0
+        w_runaway = 1 - d_runaway.norm() / d_critical \
+            if f_runaway.x != 0 and f_runaway.y != 0 \
+            else 0
+        w_runaway *= .25
         w_vision = 1 - w_runaway
 
         f_tmp = f_runaway - self.f_runaway
@@ -93,6 +96,19 @@ class EscapingController(BaseController):
         f_runaway = f_tmp
 
         f_new = f_vision * w_vision + f_runaway * w_runaway
+        print(f_vision, w_vision, f_runaway, w_runaway, f_new)
+
+        # x = self._managed_point.center
+        # v = self._managed_point.get_velocity()
+        # m = self._managed_point.m
+        # a = self._managed_point.get_acceleration() + f_new / m
+        # t = 1
+        # x_new = x + a * t * t / 2
+        # # x_new = x + v * t + a * t * t / 2
+        # print(x_new)
+        #
+        # self._astar_controller._target_point = x_new
+        # f_new = self._astar_controller.update(t, dt)
 
         return f_new
 

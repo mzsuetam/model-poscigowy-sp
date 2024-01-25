@@ -116,23 +116,24 @@ def main():
         print(directory)
         sim = Simulator.from_file(directory)
     else:
+        sim = Simulator.from_file('assets/map_test.json')
         sim = Simulator.from_file('assets/labyrinth.json')
 
     df_history = sim.run(
         verbose=True,
     )
 
-    # df_history.to_csv("history.csv", index=False)
-    # plot_history(
-    #     df_history,
-    #     sim.get_id_to_name(),
-    # )
-    # plot_paths(
-    #     df_history,
-    #     sim.get_id_to_name(),
-    #     sim.get_canvas_dim(),
-    #     sim.get_blocks(),
-    # )
+    # df_history.to_csv("results/history.csv", index=False)
+    plot_history(
+        df_history,
+        sim.get_id_to_name(),
+    )
+    plot_paths(
+        df_history,
+        sim.get_id_to_name(),
+        sim.get_canvas_dim(),
+        sim.get_blocks(),
+    )
 
 
 if __name__ == "__main__":

@@ -65,8 +65,7 @@ class AstarController(BaseGraphController):
 
             # d = (next_point - self._managed_point.center)
             # d /= d.norm()
-            # desired_a = d * 4.
-
+            # desired_a = d * 4
 
             new_f = desired_a * self._managed_point.m
 

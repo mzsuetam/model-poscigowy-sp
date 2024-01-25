@@ -76,7 +76,7 @@
       {
         "x": 10,
         "y": 16,
-        "w": 3
+        "w": 2
       },
       {
         "x": 11,
@@ -84,9 +84,9 @@
         "h": 3
       },
       {
-        "x": 14,
+        "x": 15,
         "y": 16,
-        "w": 3
+        "w": 2
       },
       {
         "x": 15,
@@ -194,6 +194,12 @@
       "type": "CollisionController",
       "managed_point_A": "p1",
       "managed_point_B": "p0",
+      "action": "stop_simulation"
+    },
+    {
+      "type": "CollisionController",
+      "managed_point_A": "p0",
+      "managed_point_B": "p0_dest",
       "action": "stop_simulation"
     }
   ]

@@ -50,6 +50,8 @@ class PursuingController(BaseController):
             (canvas_dim * int(1 / gap_between_nodes)).__tuple__()
         )
 
+        # self._used_special_case = False
+
     def apply(self, t: float, dt: float) -> None:
         d_f = self.update(t, dt)
         self._managed_point.add_force(d_f)
@@ -57,22 +59,22 @@ class PursuingController(BaseController):
     def update(self, t: float, dt: float) -> Vect2d:
 
         d = (self._target_point.center - self._managed_point.center).norm()
-        if d < 2 and len([
-            b for b in self._astar_controller._blocks if b.has_point_inside(
-                (self._target_point.center + self._managed_point.center) / 2
-            )
-        ]) == 0:
-            print("PursuingController: target reached")
-            f = self.get_force_between(
-                self._managed_point.center,
-                self._target_point.center,
-            )
-            if f.norm() > 0:
-                f = f / f.norm() * 4
-            curr_a = self._managed_point.get_acceleration()
-            f -=  curr_a * self._managed_point.m
-            return f
-
+        # if d < 1 and len([
+        #     b for b in self._astar_controller._blocks if b.has_point_inside(
+        #         (self._target_point.center + self._managed_point.center) / 2
+        #     )
+        # ]) == 0:
+        #     # print("PursuingController: target close")
+        #     self._used_special_case = True
+        #     f = self.get_force_between(
+        #         self._managed_point.center,
+        #         self._target_point.center,
+        #     )
+        #     if f.norm() > 0:
+        #         f = f / f.norm() * 2
+        #     curr_a = self._managed_point.get_acceleration()
+        #     f -=  curr_a * self._managed_point.m
+        #     return f
 
         if not self._probabilistic:
             next_center = self._calculate_next_center_inertia(t, dt)
@@ -100,7 +102,18 @@ class PursuingController(BaseController):
         self._astar_controller.destination_point = next_center
         astar_f = self._astar_controller.update(t, dt)
 
-        return astar_f
+        f = astar_f
+        # if self._used_special_case:
+        #     v = self._managed_point.get_velocity()
+        #     m = self._managed_point.m
+        #     t = 1
+        #     f_stop = v * (-2 / t * v) * m
+        #     if f_stop.norm() > 3:
+        #         f_stop = f_stop / f_stop.norm() * 3
+        #     f -= f_stop
+        #     self._used_special_case = False
+
+        return f
 
     def _calculate_next_center_inertia(self, t: float, dt: float) -> Vect2d:
         # where is the target going to head

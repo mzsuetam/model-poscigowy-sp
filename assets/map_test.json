@@ -1,7 +1,7 @@
 {
   "window": {
-    "w_px": 1600,
-    "h_px": 960
+    "w_px": 1920,
+    "h_px": 1080
   },
   "canvas": {
     "w": 30,
@@ -53,8 +53,8 @@
     "points": [
       {
         "name": "p0_dest",
-        "x": 2,
-        "y": 18,
+        "x": 28,
+        "y": 10,
         "color": "pink",
         "radius": 0.5
       },
@@ -67,8 +67,8 @@
       },
       {
         "name": "p1",
-        "x": 9,
-        "y": 9,
+        "x": 2,
+        "y": 18,
         "color": "blue",
         "enable_focus": true
       }
@@ -76,14 +76,32 @@
   },
   "controllers": [
     {
-      "type": "AstarController",
-      "managed_point": "p0",
-      "destination_point": "p0_dest"
+      "type": "ToMouseController",
+      "managed_point": "p0"
     },
     {
-      "type": "ForecastingController",
+      "type": "EscapingController",
+      "managed_point": "p0",
+      "destination_point": "p0_dest",
+      "pursuing_point": "p1"
+    },
+    {
+      "type": "PursuingController",
       "managed_point": "p1",
-      "destination_point": "p0"
+      "destination_point": "p0",
+      "probabilistic": true
+    },
+    {
+      "type": "CollisionController",
+      "managed_point_A": "p1",
+      "managed_point_B": "p0",
+      "action": "stop_simulation"
+    },
+    {
+      "type": "CollisionController",
+      "managed_point_A": "p0",
+      "managed_point_B": "p0_dest",
+      "action": "stop_simulation"
     }
   ]
 }
