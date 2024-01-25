@@ -2,6 +2,7 @@ import pygame
 import pandas as pd
 import json
 
+from simulator.controllers.escaping_controller import EscapingController
 from simulator.controllers.events_controllers.collision_controller import CollisionController
 from simulator.controllers.movement_controllers.forecasting_controller import ForecastingController
 from simulator.controllers.movement_controllers.vision_controller import VisionController
@@ -36,7 +37,7 @@ class Simulator:
 
         self._view_box = ViewBox(
             pygame.Surface((canvas_w * px_in_m, canvas_h * px_in_m)),
-            x=self._root.get_width() // 2 -  canvas_w * px_in_m // 2,
+            x=self._root.get_width() // 2 - canvas_w * px_in_m // 2,
             y=self._root.get_height() // 2 - canvas_h * px_in_m // 2,
         )
 
@@ -369,7 +370,7 @@ class Simulator:
                 point["radius"] if "radius" in point else 0.2,
                 point["color"] if "color" in point else colors.RED,
                 point["show"] if "show" in point else True,
-                point["save_history"] if "save_history" in point else True, # save_history
+                point["save_history"] if "save_history" in point else True,  # save_history
                 point["friction_factor"] if "friction_factor" in point else 5e-2,
                 point["enable_focus"] if "enable_focus" in point else False,
                 point["name"] if "name" in point else None
@@ -385,7 +386,8 @@ class Simulator:
             elif controller["type"] == AstarController.get_type() or \
                     controller["type"] == VisionController.get_type() or \
                     controller["type"] == ForecastingController.get_type() or \
-                    controller["type"] == PursuingController.get_type():
+                    controller["type"] == PursuingController.get_type() or \
+                    controller["type"] == EscapingController.get_type():
                 managed_point = sim.get_point_mass_by_name(controller["managed_point"])
                 # destination point object or string
                 if isinstance(controller["destination_point"], str):
@@ -431,6 +433,19 @@ class Simulator:
                             destination_point,
                             sim.get_canvas_dim(),
                             sim.get_blocks(),
+                            gap_between_nodes=gap_between_nodes,
+                            probabilistic=controller["probabilistic"] if "probabilistic" in controller else False
+                        )
+                    )
+                elif controller["type"] == EscapingController.get_type():
+                    pursuing_point = sim.get_point_mass_by_name(controller["pursuing_point"])
+                    sim.add_controller(
+                        EscapingController(
+                            managed_point,
+                            destination_point,
+                            pursuing_point,
+                            sim.get_canvas_dim(),
+                            sim.get_blocks(),
                             gap_between_nodes=gap_between_nodes
                         )
                     )
@@ -447,9 +462,11 @@ class Simulator:
                 elif controller["action"] == "log":
                     def action_print():
                         print(f"Collision between {point_a} and {point_b} detected")
+
                     action = action_print
                 else:
-                    raise ValueError(f"Action {controller['action']} not supported. Declare controller in the script to use it.")
+                    raise ValueError(
+                        f"Action {controller['action']} not supported. Declare controller in the script to use it.")
 
                 sim.add_controller(
                     CollisionController(

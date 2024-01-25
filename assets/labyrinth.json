@@ -166,8 +166,8 @@
       },
       {
         "name": "p1",
-        "x": 10,
-        "y": 10,
+        "x": 2,
+        "y": 18,
         "color": "blue",
         "enable_focus": true
       }
@@ -179,14 +179,16 @@
       "managed_point": "p0"
     },
     {
-      "type": "AstarController",
+      "type": "EscapingController",
       "managed_point": "p0",
-      "destination_point": "p0_dest"
+      "destination_point": "p0_dest",
+      "pursuing_point": "p1"
     },
     {
       "type": "PursuingController",
       "managed_point": "p1",
-      "destination_point": "p0"
+      "destination_point": "p0",
+      "probabilistic": true
     },
     {
       "type": "CollisionController",

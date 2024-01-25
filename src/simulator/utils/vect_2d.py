@@ -7,24 +7,24 @@ class Vect2d:
         self.y = y
 
     def __add__(self, other):
-        if type(other) is Vect2d:
-            return Vect2d(self.x + other.x, self.y + other.y)
         if type(other) is int or type(other) is float:
             return Vect2d(self.x + other, self.y + other)
+        # if type(other) is Vect2d:
+        return Vect2d(self.x + other.x, self.y + other.y)
         raise RuntimeError()
 
     def __sub__(self, other):
-        if type(other) is Vect2d:
-            return Vect2d(self.x - other.x, self.y - other.y)
         if type(other) is int or type(other) is float:
             return Vect2d(self.x - other, self.y - other)
+        # if type(other) is Vect2d:
+        return Vect2d(self.x - other.x, self.y - other.y)
         raise RuntimeError()
 
     def __mul__(self, other):
         if type(other) is int or type(other) is float:
             return Vect2d(other * self.x, other * self.y)
-        if type(other) is Vect2d:
-            return Vect2d(self.x * other.x, self.y * other.y)
+        # if type(other) is Vect2d:
+        return Vect2d(self.x * other.x, self.y * other.y)
         raise RuntimeError()
 
     def __rmul__(self, other):
@@ -46,32 +46,35 @@ class Vect2d:
     def __eq__(self, other):
         if type(other) is int or type(other) is float:
             return Vect2d(self.x == other, self.y == other)
-        if type(other) is Vect2d:
-            return Vect2d(self.x == other.x, self.y == other.y)
+        # if type(other) is Vect2d:
+        return Vect2d(self.x == other.x, self.y == other.y)
+        # raise NotImplementedError(f"Cannot compare {type(self)} with {type(other)}")
 
     def __gt__(self, other):
         if type(other) is int or type(other) is float:
             return Vect2d(self.x > other, self.y > other)
-        if type(other) is Vect2d:
-            return Vect2d(self.x > other.x, self.y > other.y)
+#         if type(other) is Vect2d:
+        return Vect2d(self.x > other.x, self.y > other.y)
+#         raise NotImplementedError(f"Cannot compare {type(self)} with {type(other)}")
 
     def __ge__(self, other):
         if type(other) is int or type(other) is float:
             return Vect2d(self.x >= other, self.y >= other)
-        if type(other) is Vect2d:
-            return Vect2d(self.x >= other.x, self.y >= other.y)
+#         if type(other) is Vect2d:
+        return Vect2d(self.x >= other.x, self.y >= other.y)
+#         raise NotImplementedError(f"Cannot compare {type(self)} with {type(other)}")
 
     def __lt__(self, other):
-        if type(other) is int or type(other) is float:
-            return other.__gt__(self)
-        if type(other) is Vect2d:
-            return other.__gt__(self)
+        return other.__gt__(self)
 
     def __le__(self, other):
-        if type(other) is int or type(other) is float:
-            return other.__ge__(self)
-        if type(other) is Vect2d:
-            return other.__ge__(self)
+        return other.__ge__(self)
+
+    def any(self) -> bool:
+        return self.x != 0 or self.y != 0
+
+    def all(self) -> bool:
+        return self.x != 0 and self.y != 0
 
     def copy(self):
         return Vect2d(self.x, self.y)
