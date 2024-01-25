@@ -1,0 +1,10 @@
+title: Model pościgowy
+subtitle: Projekt z przedmiotu "Studio projektowe 1"
+author: |
+  Łukasz Łabuz \
+  Tomasz Kawiak \
+  Mateusz Mazur \
+header-includes:
+    - \usepackage[polish]{babel} # sudo apt install texlive-lang-polish
+link-citations: true
+links-as-notes: true
