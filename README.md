@@ -15,15 +15,11 @@ w zamkniętej przestrzeni.
 
 ## Założenia projektowe
 
-- Przestrzeń będzie zamknięta
-- Przestrzeń będzie zawierała przeszkody
-- Przestrzeń będzie ładowana z pliku, w celu testowania różnych konfiguracji
-- Aktorzy będą w stanie poruszać się samodzielnie
-- Aktorzy będą w stanie unikać przeszkód
-- Aktorzy będą reagować na obecność innych aktorów (goniący będzie gonił uciekającego, a uciekający będzie uciekał przed goniącym)
-- Uciekający będzie szukał wyjścia z przestrzeni (docelowego punktu)
-- Goniący będzie próbował złapać (dotknąć) uciekającego
-- Po zakończeniu symulacji będzie możliwa analiza danych (np. średnia prędkość, czas ucieczki, czas goniącego, itp.)
+- Przestrzeń będzie zawierała przeszkody oraz będzie ładowana z pliku.
+- Aktorzy będą w stanie poruszać się oraz reagować na obecność przeszkód i innych aktorów.
+- Uciekający będzie szukał wyjścia z przestrzeni (docelowego punktu).
+- Goniący będzie próbował złapać (dotknąć) uciekającego.
+- Po zakończeniu symulacji będzie możliwa analiza danych dotyczących symulacji.
 
 # Rozwiązanie problemu
 
@@ -37,16 +33,18 @@ Oddziaływanie na ruch aktorów jest realizowane
 poprzez zastosowanie sił, które są nakładane na punkty materialne.
 
 Wyświetlanie przestrzeni oraz aktorów jest realizowane poprzez bibliotekę PyGame 
-na podstawie stanu symulacji. GUI symulatora przedstawione jest na rysunku \ref{img:hui}
+na podstawie stanu symulacji.
+GUI symulatora przedstawione jest na rysunku \ref{img:hui}
 
-![GUI symulatora \label{img:hui}](docs/img/gui.png){width=90%}
+![GUI symulatora \label{img:hui}](docs/img/gui.png){width=80%}
 
 Po zakończeniu symulacji możliwy jest eksport danych dotyczących symulowanych punktów.
 Istnieje również możliwość wyświetlenia wykresów z danymi dotyczącymi symulacji
-(stworzonymi na podstawie eksportowanych danych). Przykładowy wykres pozycji aktorów
+(stworzonymi na podstawie eksportowanych danych).
+Przykładowy wykres pozycji aktorów
 przedstawiony jest na rysunku \ref{img:chart}.
 
-![Wykres pozycji aktorów \label{img:chart}](docs/img/positions.png){width=90%}
+![Wykres pozycji aktorów \label{img:chart}](docs/img/positions.png){width=60%}
 
 ## Model zachowań aktorów
 
@@ -61,9 +59,6 @@ Na potrzeby symulacji zostały zaimplementowane m.in. następujące kontrolery:
 - `astar`: kontroler, który realizuje poruszanie się w przestrzeni na bazie wyjścia z algorytmu A*,
 - `forecasting`: kontroler, który realizuje przewidywanie ruchu danego aktora
 - `vision`: kontroler, który realizuje poszukiwanie celu oraz ograniczenie widoczności aktora
-
-Głównymi kontrolerami aktorów są:
-
 - `escaping`: kontroler realizujący ucieczkę aktora, korzysta z kontrolera `astar` oraz `vision`, 
   dokładając do nich chęć ucieczki od aktora, który go goni.
 - `chasing`: kontroler realizujący gonienie aktora, korzysta z kontrolera `astar` oraz `forecasting`, 
@@ -86,22 +81,19 @@ Pojawił się jednak problem, że kontrolery nie mogły być ze sobą łączone,
 ponieważ ich metoda `update` była nadpisywana, a nie rozszerzana.
 Wadą takiego rozwiązania jest np. aktywacji tylko w pewnych przypadkach
 lub ograniczenia wartości sił zwracanych przez kontrolery.
-
-Rozwiązaniem tego problemu było wykorzystanie kompozycji, a nie dziedziczenia 
-(nie licząc kontrolerów bazowych),
+Rozwiązaniem tego problemu było wykorzystanie kompozycji
 oraz rozdzielenie logiki kontrolerów od faktycznego wpływu na aktora.
-Dzięki takiemu rozwiązaniu kontrolery mogą być dowolnie łączone i wykorzystywać 
-wyniki zwracane przez inne kontrolery.
 
 ## Optymalizacja działania kontrolerów
 
-Aby symulacja działała poprawnie, konieczne było ciągłe zwrócenie uwagi na optymalność działania kontrolerów.
+Aby zmniejszyć czasy obliczeń, zastosowaliśmy m.in. następujące optymalizacje:
 
-Szczególnie problematyczne okazało się przewidywanie pozycji aktora uciekającego przez aktora goniącego.
-Pierwsza implementacja tego rozwiązania była bardzo kosztowna obliczeniowo,
-ponieważ do sprawdzenia potencjalnych pozycji aktora uciekającego pod kątem kolizji z przeszkodami.
-Dzięki zmianie sposobu obliczania z pętli zagnieżdżonych na pojedynczą pętlę po przefiltrowanych pozycjach 
-udało się 100-krotnie zmniejszyć czas obliczeń tego elementu.
+- wykorzystanie macierzy NumPy do obliczeń zamiast pętli,
+- zmniejszenie częstości próbkowań otoczenia aktora, 
+- wprowadzenie listy visited nodes, aby uniknąć wielokrotnego odwiedzania tego samego węzła w grafie.
+
+W przypadku przewidywania pozycji aktora uciekającego przez aktora goniącego
+czas wykonywania obliczeń udało się nam zmniejszyć około 100-krotnie.
 
 # Podział prac
 

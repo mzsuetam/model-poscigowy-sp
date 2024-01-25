@@ -96,7 +96,7 @@ class EscapingController(BaseController):
         f_runaway = f_tmp
 
         f_new = f_vision * w_vision + f_runaway * w_runaway
-        print(f_vision, w_vision, f_runaway, w_runaway, f_new)
+        # print(f_vision, w_vision, f_runaway, w_runaway, f_new)
 
         # x = self._managed_point.center
         # v = self._managed_point.get_velocity()
